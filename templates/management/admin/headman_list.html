@@ -12,7 +12,10 @@
         <input type="search" name="q" value="{{ q }}" placeholder="搜索用户名或姓名…">
         <button type="submit" class="btn btn-outline btn-sm">搜索</button>
     </form>
-    <div class="page-toolbar-actions">
+    <div class="page-toolbar-actions hide-on-desktop">
+        <a href="{% url 'management:admin_member_import_export' %}" class="btn btn-outline btn-sm">导入导出</a>
+    </div>
+    <div class="page-toolbar-actions hide-on-mobile">
         <a href="{% url 'management:admin_create_headman' %}" class="btn btn-primary btn-sm">开户</a>
     </div>
 </div>

@@ -6,6 +6,21 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    import sys
+    import os
+    print(f"DEBUG: sys.path = {sys.path}")
+    print(f"DEBUG: CWD = {os.getcwd()}")
+    print(f"DEBUG: ROOT_DIR = {os.listdir('.')}")
+    if os.path.exists('authentication'):
+        print(f"DEBUG: authentication/ exists, contents: {os.listdir('authentication')}")
+    else:
+        print("DEBUG: authentication/ directory NOT FOUND in CWD")
+
+    # Ensure the project root is in sys.path
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
     try:
         from django.core.management import execute_from_command_line

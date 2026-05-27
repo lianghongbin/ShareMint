@@ -24,6 +24,7 @@ VIEW_ACTION_SUMMARIES = {
     'authentication:api_change_password': '修改密码',
     'authentication:api_profile': '更新个人资料',
     'management:admin_create_headman': '团长开户',
+    'management:admin_create_admin': '添加管理员',
     'management:admin_headman_detail': '更新团长资料',
     'management:admin_toggle_lock': '变更团长状态',
     'management:admin_reset_headman_password': '发送密码重置邮件',

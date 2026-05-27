@@ -1,0 +1,47 @@
+{% extends "layouts/app.html" %}
+{% block title %}添加管理员 · 管理后台{% endblock %}
+{% block page_title %}添加管理员{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+{% include "includes/_mobile_page_header.html" with title="添加管理员" icon="includes/icon_shield.html" %}
+<article class="card detail-section detail-section--compact">
+    <div class="card-header-row hide-on-mobile">
+        <h2>{% include "includes/icon_shield.html" %} 添加管理员</h2>
+    </div>
+    <p class="card-desc card-desc--compact">创建新的系统管理员账号，拥有与当前账号相同的后台权限。</p>
+    <form method="post" class="form-stack form-stack--compact">
+        {% csrf_token %}
+        <div class="form-grid form-grid--compact">
+            <div class="form-group">
+                <label for="username">用户名 *</label>
+                <input type="text" name="username" id="username" required placeholder="登录用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">初始密码 *</label>
+                <input type="password" name="password" id="password" required minlength="8" placeholder="至少 8 位">
+            </div>
+            <div class="form-group">
+                <label for="name">姓名 *</label>
+                <input type="text" name="name" id="name" required placeholder="管理员姓名">
+            </div>
+            <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="text" name="phone" id="phone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+                <label for="wechat">微信号</label>
+                <input type="text" name="wechat" id="wechat" placeholder="微信号">
+            </div>
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" name="email" id="email" placeholder="邮箱">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-glow">确认添加</button>
+            <a href="{% url 'management:admin_profile' %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</article>
+{% endblock %}

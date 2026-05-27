@@ -5,6 +5,7 @@
 
 {% block content %}
 {% url 'management:headman_member_import_export' as base_url %}
+{% include "includes/_mobile_page_header.html" with title="导入导出" icon="includes/icon_backup.html" %}
 {% if is_locked %}
 <div class="alert alert-error">{% include "includes/icon_lock.html" %} 账号已锁定，仅可查看与导出，无法导入。</div>
 {% endif %}

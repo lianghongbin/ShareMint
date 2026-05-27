@@ -1,6 +1,12 @@
 <div class="settings-rows settings-rows--compact admin-mobile-system-links">
     <div class="settings-row">
         <div class="settings-row-line">
+            <div class="settings-row-main"><strong>添加管理员</strong></div>
+            <a href="{% url 'management:admin_create_admin' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+    <div class="settings-row">
+        <div class="settings-row-line">
             <div class="settings-row-main"><strong>价格设置</strong></div>
             <a href="{% url 'management:admin_settings_price' %}" class="btn btn-secondary btn-sm">进入</a>
         </div>

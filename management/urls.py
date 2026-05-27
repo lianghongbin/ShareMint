@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/headmen/', views.admin_headman_list, name='admin_headman_list'),
     path('admin/headmen/create/', views.admin_create_headman, name='admin_create_headman'),
+    path('admin/admins/create/', views.admin_create_admin, name='admin_create_admin'),
     path('admin/members/', views.admin_member_list, name='admin_member_list'),
     path('admin/members/import-export/', views.admin_member_import_export, name='admin_member_import_export'),
     path('admin/members/<int:pk>/', views.admin_member_detail, name='admin_member_detail'),

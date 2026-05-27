@@ -29,6 +29,15 @@ class FirstLoginPasswordChangeMiddleware:
         return self._allowed_paths
 
     def __call__(self, request):
+        if request.path == '/auth/login/' and request.method == 'POST':
+            import sys
+            print("\n--- LOGIN ATTEMPT HEADERS ---", file=sys.stderr)
+            print(f"HOST: {request.get_host()}", file=sys.stderr)
+            print(f"ORIGIN: {request.META.get('HTTP_ORIGIN')}", file=sys.stderr)
+            print(f"REFERER: {request.META.get('HTTP_REFERER')}", file=sys.stderr)
+            print(f"X-FORWARDED-PROTO: {request.META.get('HTTP_X_FORWARDED_PROTO')}", file=sys.stderr)
+            print("-----------------------------\n", file=sys.stderr)
+
         user = request.user
         if user.is_authenticated and user.is_first_login:
             if not self._is_allowed(request):

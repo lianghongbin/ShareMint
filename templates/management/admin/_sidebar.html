@@ -18,6 +18,9 @@
 </div>
 <div class="nav-group">
     <span class="nav-group-label">系统设置</span>
+    <a href="{% url 'management:admin_create_admin' %}" class="nav-item {% if current_url_name == 'admin_create_admin' %}is-active{% endif %}">
+        {% include "includes/icon_shield.html" %} 添加管理员
+    </a>
     <a href="{% url 'management:admin_settings_price' %}" class="nav-item {% if current_url_name == 'admin_settings_price' %}is-active{% endif %}">
         {% include "includes/icon_coin.html" %} 价格设置
     </a>

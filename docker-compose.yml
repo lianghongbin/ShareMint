@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "${RUNSERVER_PORT:-9000}:9000"
+    env_file:
+      - .env
+    environment:
+      DEBUG: 1
+      RUNSERVER_PORT: 9000
+    volumes:
+      - .:/app
+    command: sh docker/entrypoint.sh
+    restart: unless-stopped
+
+volumes:
+  sharemint_data:

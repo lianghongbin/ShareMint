@@ -407,6 +407,61 @@ def admin_create_headman(request):
 
 
 @admin_required
+@require_http_methods(['GET', 'POST'])
+def admin_create_admin(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        wechat = request.POST.get('wechat', '').strip()
+        email = request.POST.get('email', '').strip()
+        email_error = validate_new_email(User(), email) if email else None
+
+        if not username or not password or not name:
+            messages.error(request, '用户名、密码、姓名为必填项。')
+        elif len(password) < 8:
+            messages.error(request, '密码至少 8 位。')
+        elif is_username_taken(username):
+            messages.error(request, '用户名已存在。')
+        elif email_error:
+            messages.error(request, email_error)
+        else:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email or '',
+                    role=Role.ADMIN,
+                    is_staff=True,
+                    is_superuser=True,
+                    is_first_login=True,
+                )
+                Profile.objects.create(
+                    user=user,
+                    name=name,
+                    phone=phone,
+                    wechat=wechat,
+                    email=email,
+                )
+            record_audit(
+                request,
+                action='management:admin_create_admin',
+                after={
+                    '用户名': username,
+                    '姓名': name,
+                    '手机': phone or '—',
+                    '微信': wechat or '—',
+                    '邮箱': email or '—',
+                },
+            )
+            messages.success(request, f'管理员 {username} 已创建。')
+            return redirect('management:admin_create_admin')
+
+    return render(request, 'management/admin/create_admin.html')
+
+
+@admin_required
 @require_http_methods(['POST'])
 def admin_toggle_headman_lock(request, pk):
     headman = get_object_or_404(User, pk=pk, role=Role.HEADMAN)

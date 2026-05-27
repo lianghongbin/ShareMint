@@ -20,6 +20,7 @@ ADMIN_MY_URL_NAMES = frozenset({
     'admin_settings_email',
     'admin_settings_audit',
     'admin_settings_audit_detail',
+    'admin_create_admin',
 })
 
 
