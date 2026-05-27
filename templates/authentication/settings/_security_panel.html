@@ -1,0 +1,86 @@
+<div class="settings-rows settings-rows--compact">
+    {% if not is_locked %}
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main">
+                <strong>{% include "includes/icon_lock.html" %} 登录密码</strong>
+                <span class="hide-on-mobile">定期更换密码，降低账户被盗风险</span>
+            </div>
+            <a href="{% url 'authentication:change_password' %}" class="btn btn-secondary btn-sm">修改密码</a>
+        </div>
+    </div>
+
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main">
+                <strong>{% include "includes/icon_wallet.html" %} 通知邮箱</strong>
+                {% if has_notification_email %}
+                <span>{% if notification_email %}当前：{{ notification_email }}{% endif %}</span>
+                {% else %}
+                <span>尚未绑定邮箱</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'authentication:settings_change_email' %}" class="btn btn-secondary btn-sm">
+                {% if has_notification_email %}更换{% else %}绑定{% endif %}
+            </a>
+        </div>
+    </div>
+
+    <div class="settings-row settings-row--section-head">
+        <div class="settings-row-main">
+            <strong>{% include "includes/icon_shield.html" %} 二次验证</strong>
+            <span class="hide-on-mobile">可同时开启两种方式，登录时分别验证</span>
+        </div>
+    </div>
+
+    <div class="settings-row settings-row--sub">
+        <div class="settings-row-line">
+            <div class="settings-row-main">
+                <strong>验证器 App</strong>
+            </div>
+            <div class="settings-row-actions">
+                {% if two_factor_totp_enabled %}
+                <span class="badge badge-success">已开启</span>
+                <button type="button" class="btn btn-outline btn-sm" data-2fa-disable-open data-method="totp" data-label="验证器 App">关闭</button>
+                {% else %}
+                <span class="badge badge-muted">未开启</span>
+                <a href="{% url 'authentication:settings_two_factor_setup_totp' %}" class="btn btn-primary btn-sm btn-glow">开启</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-row settings-row--sub">
+        <div class="settings-row-line">
+            <div class="settings-row-main">
+                <strong>邮件验证</strong>
+                {% if has_notification_email %}
+                <span>验证码发送至 {{ notification_email }}</span>
+                {% else %}
+                <span class="hide-on-mobile">请先绑定邮箱</span>
+                {% endif %}
+            </div>
+            <div class="settings-row-actions">
+                {% if two_factor_email_enabled %}
+                <span class="badge badge-success">已开启</span>
+                <button type="button" class="btn btn-outline btn-sm" data-2fa-disable-open data-method="email" data-label="邮件验证">关闭</button>
+                {% elif has_notification_email %}
+                <span class="badge badge-muted">未开启</span>
+                <a href="{% url 'authentication:settings_two_factor_setup_email' %}" class="btn btn-primary btn-sm btn-glow">开启</a>
+                {% else %}
+                <span class="badge badge-muted">未开启</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main">
+                <strong>{% include "includes/icon_wallet.html" %} 退出登录</strong>
+            </div>
+            <a href="{% url 'authentication:logout' %}" class="btn btn-outline btn-sm">退出</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,87 @@
+<div class="change-email-panel">
+    {% if has_current_email %}
+    {% if not in_modal %}
+    <p class="card-desc">当前邮箱：<strong>{{ masked_current_email }}</strong>。更换前需先验证原邮箱，再验证新邮箱。</p>
+    {% else %}
+    <p class="card-desc card-desc--compact">当前：{{ masked_current_email }}</p>
+    {% endif %}
+
+    {% if step == 'verify_old' %}
+    <div class="settings-step-label">第 1 步 · 验证原邮箱</div>
+    <form method="post" action="{% url 'authentication:settings_change_email' %}" class="form-actions-row change-email-form">
+        {% csrf_token %}
+        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+        <button type="submit" name="action" value="send_old_code" class="btn btn-secondary btn-sm">发送验证码至原邮箱</button>
+    </form>
+    <form method="post" action="{% url 'authentication:settings_change_email' %}" class="form-stack change-email-form">
+        {% csrf_token %}
+        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+        <div class="form-group">
+            <label for="{% if in_modal %}modal-{% endif %}old-token">原邮箱验证码</label>
+            <input type="text" name="token" id="{% if in_modal %}modal-{% endif %}old-token" inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="输入 6 位验证码">
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="verify_old_code" class="btn btn-primary btn-glow btn-sm">验证并继续</button>
+            {% if in_modal %}
+            <button type="button" class="btn btn-ghost btn-sm" data-modal-close>取消</button>
+            {% else %}
+            <a href="{% url 'authentication:settings' %}" class="btn btn-ghost btn-sm">取消</a>
+            {% endif %}
+        </div>
+    </form>
+    {% else %}
+    <div class="settings-step-label">第 2 步 · 填写并验证新邮箱</div>
+    {% if not in_modal %}<p class="card-desc">原邮箱已验证，请在 15 分钟内完成更换。</p>{% endif %}
+    {% endif %}
+    {% else %}
+    {% if not in_modal %}
+    <p class="card-desc">绑定邮箱后可用于接收验证码、重置密码等通知。</p>
+    {% endif %}
+    {% endif %}
+
+    {% if step == 'set_new' %}
+    <form method="post" action="{% url 'authentication:settings_change_email' %}" class="form-stack change-email-form">
+        {% csrf_token %}
+        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+        <div class="form-grid form-grid--compact">
+            <div class="form-group">
+                <label for="{% if in_modal %}modal-{% endif %}new_email">新邮箱</label>
+                <input type="email" name="new_email" id="{% if in_modal %}modal-{% endif %}new_email" required
+                       value="{{ pending_new_email }}" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="{% if in_modal %}modal-{% endif %}confirm_email">确认新邮箱</label>
+                <input type="email" name="confirm_email" id="{% if in_modal %}modal-{% endif %}confirm_email" required
+                       value="{{ pending_new_email }}" autocomplete="email">
+            </div>
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="send_new_code" class="btn btn-secondary btn-sm">发送验证码至新邮箱</button>
+        </div>
+    </form>
+
+    {% if pending_new_email %}
+    <p class="card-desc card-desc--compact">验证码已发送至 <strong>{{ masked_pending_new_email }}</strong></p>
+    <form method="post" action="{% url 'authentication:settings_change_email' %}" class="form-stack change-email-form">
+        {% csrf_token %}
+        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+        <div class="form-group">
+            <label for="{% if in_modal %}modal-{% endif %}new-token">新邮箱验证码</label>
+            <input type="text" name="token" id="{% if in_modal %}modal-{% endif %}new-token" inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="输入 6 位验证码">
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="confirm_new_email" class="btn btn-primary btn-glow btn-sm">确认更换</button>
+            {% if in_modal %}
+            <button type="button" class="btn btn-ghost btn-sm" data-modal-close>取消</button>
+            {% else %}
+            <a href="{% url 'authentication:settings' %}" class="btn btn-ghost btn-sm">取消</a>
+            {% endif %}
+        </div>
+    </form>
+    {% endif %}
+    {% endif %}
+</div>

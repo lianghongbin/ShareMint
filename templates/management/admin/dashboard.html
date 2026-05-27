@@ -4,6 +4,8 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
+{% include "includes/_mobile_page_header.html" with title="数据概览" icon="includes/icon_chart.html" %}
+
 <div class="stat-grid">
     <article class="stat-card crypto-glow">
         <div class="stat-icon">{% include "includes/icon_coin.html" %}</div>
@@ -54,18 +56,6 @@
             <canvas id="chart-team-ranking" aria-label="团长团队投资排行"></canvas>
         </div>
     </article>
-</div>
-
-<div class="quick-actions card detail-section">
-    <div class="card-header-row">
-        <h2>快捷入口</h2>
-    </div>
-    <div class="quick-actions-grid">
-        <a href="{% url 'management:admin_headman_list' %}" class="quick-action-item">{% include "includes/icon_users.html" %} 团长列表</a>
-        <a href="{% url 'management:admin_create_headman' %}" class="quick-action-item">{% include "includes/icon_wallet.html" %} 团长开户</a>
-        <a href="{% url 'management:admin_settings_price' %}" class="quick-action-item">{% include "includes/icon_coin.html" %} 价格设置</a>
-        <a href="{% url 'management:admin_settings_backup' %}" class="quick-action-item">{% include "includes/icon_backup.html" %} 备份恢复</a>
-    </div>
 </div>
 
 {{ charts|json_script:"dashboard-chart-data" }}

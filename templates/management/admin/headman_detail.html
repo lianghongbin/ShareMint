@@ -10,7 +10,7 @@
     <div class="detail-toolbar-right">
         {% if headman.is_locked %}<span class="badge badge-danger">已锁定</span>{% endif %}
         {% if headman.is_first_login %}<span class="badge badge-warning">待改密</span>{% endif %}
-        <form method="post" action="{% url 'management:admin_reset_headman_password' headman.pk %}" class="inline-form"
+        <form method="post" action="{% url 'management:admin_reset_headman_password' headman.pk %}" class="inline-form hide-on-mobile"
               onsubmit="return confirm('确认向该团长注册邮箱发送密码重置链接？');">
             {% csrf_token %}
             <input type="hidden" name="redirect_to" value="{{ request.path }}">
@@ -27,13 +27,23 @@
 </div>
 
 {# ① 顶部：团长资料（查看 ↔ 原地编辑） #}
-<article class="card detail-section">
+<article class="card detail-section mobile-collapsible is-collapsed" id="headman-profile-section">
     <form id="profile-form" method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_profile">
         <input type="hidden" name="confirmed" id="confirmed-field" value="0">
 
-        <div class="card-header-row">
+        <div class="card-header-row mobile-collapsible__header">
+            <div class="mobile-collapsible__lead hide-on-desktop">
+                <button type="button"
+                        class="mobile-collapsible__toggle"
+                        data-mobile-collapsible-toggle
+                        aria-expanded="false"
+                        aria-controls="profile-block"
+                        aria-label="展开团长资料">
+                    <span class="mobile-collapsible__chevron" aria-hidden="true"></span>
+                </button>
+            </div>
             <h2>{% include "includes/icon_wallet.html" %} 团长资料</h2>
             <div class="profile-actions">
                 <a href="#" class="text-link" id="btn-edit">编辑</a>
@@ -45,7 +55,7 @@
             </div>
         </div>
 
-        <div class="profile-grid profile-block" id="profile-block">
+        <div class="profile-grid profile-block mobile-collapsible__body" id="profile-block">
             <div class="profile-cell">
                 <span class="field-label">用户名</span>
                 <span class="field-view">{{ headman.username }}</span>
@@ -110,8 +120,8 @@
     </article>
 </div>
 
-{# ③ 底部：线下成员 #}
-<section class="detail-section">
+{# ③ 底部：线下成员（PC） #}
+<section class="detail-section hide-on-mobile">
     <div class="card-header-row">
         <h2>{% include "includes/icon_users.html" %} 线下成员</h2>
         <span class="text-muted">共 {{ stats.member_count }} 人</span>
@@ -176,6 +186,21 @@
     const confirmedField = document.getElementById('confirmed-field');
     const summary = document.getElementById('confirm-summary');
     const btnConfirm = document.getElementById('btn-confirm-save');
+    const profileSection = document.getElementById('headman-profile-section');
+    const collapseToggle = profileSection && profileSection.querySelector('[data-mobile-collapsible-toggle]');
+
+    function setProfileExpanded(expanded) {
+        if (!profileSection || !collapseToggle) return;
+        profileSection.classList.toggle('is-collapsed', !expanded);
+        collapseToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        collapseToggle.setAttribute('aria-label', expanded ? '收起团长资料' : '展开团长资料');
+    }
+
+    if (collapseToggle) {
+        collapseToggle.addEventListener('click', function () {
+            setProfileExpanded(profileSection.classList.contains('is-collapsed'));
+        });
+    }
 
     const inputs = form.querySelectorAll('.field-edit');
     let snapshot = {};
@@ -195,6 +220,7 @@
         block.classList.add('is-editing');
         btnEdit.hidden = true;
         editActions.hidden = false;
+        setProfileExpanded(true);
     }
 
     function exitEdit(e) {

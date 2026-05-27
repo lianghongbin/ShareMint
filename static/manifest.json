@@ -1,0 +1,32 @@
+{
+  "name": "ShareMint 分佣管理系统",
+  "short_name": "ShareMint",
+  "description": "GDT 团长与成员分佣管理平台",
+  "start_url": "/auth/login/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e3a5c",
+  "theme_color": "#0e3a5c",
+  "lang": "zh-Hans",
+  "icons": [
+    {
+      "src": "/static/images/logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

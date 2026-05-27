@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Q, Sum, Value
+from django.db.models import Count, ExpressionWrapper, F, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.db.models.fields import DecimalField
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,13 +12,20 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from authentication.models import Role, User
+from authentication.settings_context import build_settings_context
+from authentication.email_change_context import build_email_change_context
 from authentication.users import is_username_taken
 from authentication.providers import get_provider
 from commissions.commission_config import get_commission_settings, parse_commission_form, save_commission_settings
 from commissions.constants import GDT_CURRENT_PRICE_KEY
 from commissions.models import SystemConfig
 from commissions.services import calculate_headman_commission
-from management.decorators import admin_required, headman_required, member_required
+from management.decorators import (
+    admin_required,
+    headman_required,
+    member_required,
+    reject_locked_headman,
+)
 from management.models import AuditLog, Investment, Profile
 from management.services.backup import create_backup, list_backups, restore_backup
 from management.services.dashboard import get_admin_dashboard_context, get_headman_dashboard_context
@@ -73,7 +80,7 @@ def _paginate(request, queryset, page_size=PAGE_SIZE):
     return paginator.get_page(request.GET.get('page'))
 
 
-def _list_query_string(request, *, sort=None, order=None, sortable=None) -> str:
+def _list_query_string(request, *, sort=None, order=None, sortable=None, preserve=()) -> str:
     from urllib.parse import urlencode
 
     sortable = sortable or HEADMAN_LIST_SORTABLE
@@ -81,6 +88,10 @@ def _list_query_string(request, *, sort=None, order=None, sortable=None) -> str:
     q = request.GET.get('q', '').strip()
     if q:
         params['q'] = q
+    for key in preserve:
+        val = request.GET.get(key, '').strip()
+        if val:
+            params[key] = val
     sort = sort or request.GET.get('sort', 'date_joined')
     order = order or request.GET.get('order', 'desc')
     if sort in sortable:
@@ -88,6 +99,27 @@ def _list_query_string(request, *, sort=None, order=None, sortable=None) -> str:
     if order in ('asc', 'desc'):
         params['order'] = order
     return urlencode(params)
+
+
+def _members_with_totals(queryset):
+    gdt_price = SystemConfig.get_gdt_price()
+    return queryset.select_related('profile').annotate(
+        total_investment=Coalesce(
+            Sum('investments__investment_amount'),
+            Value(Decimal('0')),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        ),
+        total_tokens=Coalesce(
+            Sum('investments__holding_quantity'),
+            Value(Decimal('0')),
+            output_field=DecimalField(max_digits=18, decimal_places=8),
+        ),
+    ).annotate(
+        total_market_value=ExpressionWrapper(
+            F('total_tokens') * Value(gdt_price),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        ),
+    )
 
 
 @login_required
@@ -100,6 +132,117 @@ def role_dashboard_redirect(request):
 @admin_required
 def admin_dashboard(request):
     return render(request, 'management/admin/dashboard.html', get_admin_dashboard_context())
+
+
+@admin_required
+def admin_mobile_menu(request):
+    return redirect('management:admin_profile')
+
+
+@admin_required
+@require_http_methods(['GET', 'POST'])
+def admin_profile(request):
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    if request.method == 'POST':
+        before_profile = profile_snapshot(profile)
+        profile.phone = request.POST.get('phone', '').strip()
+        profile.wechat = request.POST.get('wechat', '').strip()
+        profile.save()
+        record_update_audit(
+            request,
+            before=before_profile,
+            after=profile_snapshot(profile),
+            action='management:admin_profile',
+        )
+        messages.success(request, '资料已更新。')
+        return redirect('management:admin_profile')
+
+    return render(
+        request,
+        'management/admin/profile.html',
+        {
+            'profile': profile,
+            **build_settings_context(request.user),
+            **build_email_change_context(request),
+        },
+    )
+
+
+@admin_required
+def admin_member_list(request):
+    q = request.GET.get('q', '').strip()
+    headman_id = request.GET.get('headman', '').strip()
+    sort = request.GET.get('sort', 'date_joined')
+    order = request.GET.get('order', 'desc')
+    if sort not in MEMBER_LIST_SORTABLE:
+        sort = 'date_joined'
+    if order not in ('asc', 'desc'):
+        order = 'desc'
+
+    order_prefix = '' if order == 'asc' else '-'
+    headmen = User.objects.filter(role=Role.HEADMAN).select_related('profile').order_by('username')
+    members = _members_with_totals(User.objects.filter(role=Role.MEMBER))
+
+    selected_headman = None
+    if headman_id.isdigit():
+        selected_headman = headmen.filter(pk=int(headman_id)).first()
+        if selected_headman:
+            members = members.filter(referrer_id=selected_headman.pk)
+        else:
+            headman_id = ''
+
+    if q:
+        members = members.filter(
+            Q(username__icontains=q) | Q(profile__name__icontains=q)
+        )
+
+    members = members.order_by(f'{order_prefix}{MEMBER_LIST_SORTABLE[sort]}', 'id')
+    page_obj = _paginate(request, members)
+    return render(request, 'management/admin/member_list.html', {
+        'page_obj': page_obj,
+        'members': page_obj,
+        'headmen': headmen,
+        'selected_headman_id': headman_id,
+        'selected_headman': selected_headman,
+        'q': q,
+        'sort': sort,
+        'order': order,
+        'query': _list_query_string(
+            request,
+            sort=sort,
+            order=order,
+            sortable=MEMBER_LIST_SORTABLE,
+            preserve=('headman',),
+        ),
+    })
+
+
+@admin_required
+def admin_member_detail(request, pk):
+    member = get_object_or_404(
+        _members_with_totals(User.objects.select_related('profile')),
+        pk=pk,
+        role=Role.MEMBER,
+    )
+    profile = getattr(member, 'profile', None)
+    all_investments = Investment.objects.filter(user=member)
+    gdt_price = SystemConfig.get_gdt_price()
+    total_market_value = sum((inv.current_market_value for inv in all_investments), Decimal('0'))
+    investments = all_investments.order_by('-investment_date')[:50]
+    context = {
+        'member': member,
+        'profile': profile,
+        'investments': investments,
+        'gdt_price': gdt_price,
+        'total_market_value': total_market_value,
+        'show_investment_actions': False,
+    }
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'management/headman/_member_detail_modal.html', context)
+    return redirect('management:admin_member_list')
 
 
 @admin_required
@@ -527,17 +670,14 @@ def headman_member_list(request):
         order = 'desc'
 
     order_prefix = '' if order == 'asc' else '-'
-    members = request.user.referred_members.filter(role=Role.MEMBER).select_related('profile').annotate(
-        total_investment=Coalesce(
-            Sum('investments__investment_amount'),
-            Value(Decimal('0')),
-            output_field=DecimalField(max_digits=18, decimal_places=2),
-        ),
-    ).order_by(f'{order_prefix}{MEMBER_LIST_SORTABLE[sort]}', 'id')
+    members = _members_with_totals(
+        request.user.referred_members.filter(role=Role.MEMBER)
+    )
     if q:
         members = members.filter(
             Q(username__icontains=q) | Q(profile__name__icontains=q)
         )
+    members = members.order_by(f'{order_prefix}{MEMBER_LIST_SORTABLE[sort]}', 'id')
     page_obj = _paginate(request, members)
     return render(request, 'management/headman/member_list.html', {
         'page_obj': page_obj,
@@ -553,18 +693,7 @@ def headman_member_list(request):
 @headman_required
 def headman_member_detail(request, pk):
     member = get_object_or_404(
-        User.objects.select_related('profile').annotate(
-            total_investment=Coalesce(
-                Sum('investments__investment_amount'),
-                Value(Decimal('0')),
-                output_field=DecimalField(max_digits=18, decimal_places=2),
-            ),
-            total_tokens=Coalesce(
-                Sum('investments__holding_quantity'),
-                Value(Decimal('0')),
-                output_field=DecimalField(max_digits=18, decimal_places=8),
-            ),
-        ),
+        _members_with_totals(User.objects.select_related('profile')),
         pk=pk,
         role=Role.MEMBER,
         referrer=request.user,
@@ -595,9 +724,9 @@ def headman_profile(request):
         defaults={'name': request.user.username},
     )
     if request.method == 'POST':
-        if request.user.is_locked:
-            messages.error(request, '账号已锁定，无法修改资料。')
-            return redirect('management:headman_profile')
+        blocked = reject_locked_headman(request, redirect_to='management:headman_profile')
+        if blocked:
+            return blocked
         before_profile = profile_snapshot(profile)
         profile.name = request.POST.get('name', profile.name).strip()
         profile.phone = request.POST.get('phone', '').strip()
@@ -612,15 +741,23 @@ def headman_profile(request):
         messages.success(request, '资料已更新。')
         return redirect('management:headman_profile')
 
-    return render(request, 'management/headman/profile.html', {'profile': profile})
+    return render(
+        request,
+        'management/headman/profile.html',
+        {
+            'profile': profile,
+            **build_settings_context(request.user),
+            **build_email_change_context(request),
+        },
+    )
 
 
 @headman_required
 @require_http_methods(['GET', 'POST'])
 def headman_add_member(request):
-    if request.user.is_locked:
-        messages.error(request, '账号已锁定，无法添加新成员。')
-        return redirect('management:headman_member_list')
+    blocked = reject_locked_headman(request)
+    if blocked:
+        return blocked
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -685,9 +822,9 @@ def headman_add_member(request):
 @headman_required
 @require_http_methods(['GET', 'POST'])
 def headman_add_investment(request, pk=None):
-    if request.user.is_locked:
-        messages.error(request, '账号已锁定，无法追加投资。')
-        return redirect('management:headman_member_list')
+    blocked = reject_locked_headman(request)
+    if blocked:
+        return blocked
 
     members = (
         request.user.referred_members.filter(role=Role.MEMBER)
@@ -798,7 +935,15 @@ def member_profile(request):
         messages.success(request, '资料已更新。')
         return redirect('management:member_profile')
 
-    return render(request, 'management/member/profile.html', {'profile': profile})
+    return render(
+        request,
+        'management/member/profile.html',
+        {
+            'profile': profile,
+            **build_settings_context(request.user),
+            **build_email_change_context(request),
+        },
+    )
 
 
 # ── OAuth 预留 ─────────────────────────────────────────────────────

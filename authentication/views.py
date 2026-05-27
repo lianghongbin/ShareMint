@@ -4,14 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_http_methods
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from authentication.models import TwoFactorMethod, User
+from authentication.models import Role, TwoFactorMethod, User
 from authentication.serializers import PasswordChangeSerializer, ProfileSerializer, UserSerializer
+from management.decorators import LOCKED_HEADMAN_MSG, reject_locked_headman
 from authentication.two_factor import (
     generate_secret,
     get_pending_two_factor_methods,
@@ -29,8 +30,14 @@ from authentication.two_factor import (
     verify_token,
     verify_two_factor_token_for_method,
 )
+from authentication.email_change_context import (
+    build_email_change_context,
+    get_email_change_redirect_url,
+    set_email_change_return,
+)
+from authentication.settings_context import build_settings_context
 from management.models import Profile
-from management.services.audit import record_audit
+from management.services.audit import profile_snapshot, record_audit, record_update_audit
 
 from authentication.constants import (
     EMAIL_CHANGE_PENDING_NEW_KEY,
@@ -96,6 +103,13 @@ class CustomLoginView(LoginView):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def change_password_view(request):
+    if not request.user.is_first_login:
+        blocked = reject_locked_headman(
+            request,
+            redirect_to='management:headman_profile' if request.user.is_headman else 'authentication:dashboard',
+        )
+        if blocked:
+            return blocked
     template_name = (
         'authentication/change_password.html'
         if request.user.is_first_login
@@ -152,19 +166,19 @@ def dashboard_view(request):
 @login_required
 def settings_center_view(request):
     user = request.user
-    notification_email = get_user_notification_email(user)
+    if user.is_headman:
+        return redirect(f'{reverse("management:headman_profile")}?tab=security')
+    if user.is_member:
+        return redirect(f'{reverse("management:member_profile")}?tab=security')
+    if user.is_admin:
+        return redirect(f'{reverse("management:admin_profile")}?tab=security')
+
     return render(
         request,
         'authentication/settings/index.html',
         {
             'sidebar_template': role_sidebar_template(user),
-            'two_factor_enabled': user.two_factor_enabled,
-            'two_factor_method': user.two_factor_method,
-            'two_factor_totp_enabled': user.two_factor_totp_enabled,
-            'two_factor_email_enabled': user.two_factor_email_enabled,
-            'two_factor_method_label': user.get_two_factor_method_display_label(),
-            'notification_email': mask_email(notification_email) if notification_email else '',
-            'has_notification_email': bool(notification_email),
+            **build_settings_context(user),
         },
     )
 
@@ -172,15 +186,21 @@ def settings_center_view(request):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def settings_change_email_view(request):
+    blocked = reject_locked_headman(
+        request,
+        redirect_to='management:headman_profile' if request.user.is_headman else 'authentication:dashboard',
+    )
+    if blocked:
+        return blocked
     user = request.user
+    return_to = request.POST.get('return_to') or request.GET.get('return_to')
+    if return_to:
+        set_email_change_return(request, return_to)
+
     current_email = get_current_user_email(user)
     has_current_email = bool(current_email)
-    step = 'verify_old'
-
-    if has_current_email and is_old_email_verified(request.session):
-        step = 'set_new'
-    elif not has_current_email:
-        step = 'set_new'
+    email_ctx = build_email_change_context(request)
+    step = email_ctx['step']
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -188,7 +208,7 @@ def settings_change_email_view(request):
         if action == 'send_old_code':
             if not has_current_email:
                 messages.error(request, '当前未绑定邮箱。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
             ok, msg = send_email_change_code(
                 request.session,
                 current_email,
@@ -199,38 +219,38 @@ def settings_change_email_view(request):
                 messages.success(request, f'验证码已发送至 {msg}')
             else:
                 messages.error(request, msg)
-            return redirect('authentication:settings_change_email')
+            return redirect(get_email_change_redirect_url(request, ongoing=True))
 
         if action == 'verify_old_code':
             if not has_current_email:
                 messages.error(request, '当前未绑定邮箱。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
             token = request.POST.get('token', '').strip()
             if not token:
                 messages.error(request, '请输入验证码。')
             elif verify_old_email_code(request.session, token):
                 mark_old_email_verified(request.session)
                 messages.success(request, '原邮箱验证通过，请填写新邮箱。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
             else:
                 messages.error(request, '验证码不正确或已过期，请重试。')
-            return redirect('authentication:settings_change_email')
+            return redirect(get_email_change_redirect_url(request, ongoing=True))
 
         if action == 'send_new_code':
             if has_current_email and not is_old_email_verified(request.session):
                 messages.error(request, '请先完成原邮箱验证。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
 
             new_email = request.POST.get('new_email', '').strip()
             confirm_email = request.POST.get('confirm_email', '').strip()
             if new_email != confirm_email:
                 messages.error(request, '两次输入的新邮箱不一致。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
 
             error = validate_new_email(user, new_email)
             if error:
                 messages.error(request, error)
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
 
             request.session[EMAIL_CHANGE_PENDING_NEW_KEY] = new_email
             ok, msg = send_email_change_code(
@@ -243,17 +263,17 @@ def settings_change_email_view(request):
                 messages.success(request, f'验证码已发送至 {msg}')
             else:
                 messages.error(request, msg)
-            return redirect('authentication:settings_change_email')
+            return redirect(get_email_change_redirect_url(request, ongoing=True))
 
         if action == 'confirm_new_email':
             if has_current_email and not is_old_email_verified(request.session):
                 messages.error(request, '请先完成原邮箱验证。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
 
             pending_new = request.session.get(EMAIL_CHANGE_PENDING_NEW_KEY, '').strip()
             if not pending_new:
                 messages.error(request, '请先填写新邮箱并发送验证码。')
-                return redirect('authentication:settings_change_email')
+                return redirect(get_email_change_redirect_url(request, ongoing=True))
 
             token = request.POST.get('token', '').strip()
             if not token:
@@ -265,9 +285,6 @@ def settings_change_email_view(request):
                 if error:
                     messages.error(request, error)
                 else:
-                    from management.models import Profile
-                    from management.services.audit import profile_snapshot, record_update_audit
-
                     profile, _ = Profile.objects.get_or_create(
                         user=user,
                         defaults={'name': user.username},
@@ -283,27 +300,15 @@ def settings_change_email_view(request):
                     )
                     clear_email_change_session(request.session)
                     messages.success(request, f'邮箱已更新为 {mask_email(pending_new)}。')
-                    return redirect('authentication:settings')
-            return redirect('authentication:settings_change_email')
+                    return redirect(get_email_change_redirect_url(request, ongoing=False))
+            return redirect(get_email_change_redirect_url(request, ongoing=True))
 
-    if has_current_email and is_old_email_verified(request.session):
-        step = 'set_new'
-    elif has_current_email:
-        step = 'verify_old'
-    else:
-        step = 'set_new'
-
-    pending_new = request.session.get(EMAIL_CHANGE_PENDING_NEW_KEY, '')
     return render(
         request,
         'authentication/settings/change_email.html',
         {
             'sidebar_template': role_sidebar_template(user),
-            'has_current_email': has_current_email,
-            'masked_current_email': mask_email(current_email) if current_email else '',
-            'step': step,
-            'pending_new_email': pending_new,
-            'masked_pending_new_email': mask_email(pending_new) if pending_new else '',
+            **email_ctx,
         },
     )
 
@@ -313,9 +318,18 @@ def settings_two_factor_setup_view(request):
     return redirect('authentication:settings')
 
 
+def _reject_locked_headman_settings(request):
+    if not request.user.is_headman:
+        return None
+    return reject_locked_headman(request, redirect_to='management:headman_profile')
+
+
 @login_required
 @require_http_methods(['GET', 'POST'])
 def settings_two_factor_setup_totp_view(request):
+    blocked = _reject_locked_headman_settings(request)
+    if blocked:
+        return blocked
     user = request.user
     if user.two_factor_totp_enabled:
         messages.info(request, '验证器 App 二次验证已开启。')
@@ -380,6 +394,9 @@ def settings_two_factor_setup_totp_view(request):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def settings_two_factor_setup_email_view(request):
+    blocked = _reject_locked_headman_settings(request)
+    if blocked:
+        return blocked
     user = request.user
     if user.two_factor_email_enabled:
         messages.info(request, '邮件二次验证已开启。')
@@ -436,6 +453,9 @@ def settings_two_factor_setup_email_view(request):
 @login_required
 @require_http_methods(['POST'])
 def settings_two_factor_send_code_view(request):
+    blocked = _reject_locked_headman_settings(request)
+    if blocked:
+        return blocked
     user = request.user
     purpose = request.POST.get('purpose', '关闭二次验证')
     if not user.two_factor_email_enabled:
@@ -453,6 +473,9 @@ def settings_two_factor_send_code_view(request):
 @login_required
 @require_http_methods(['POST'])
 def settings_two_factor_disable_view(request):
+    blocked = _reject_locked_headman_settings(request)
+    if blocked:
+        return blocked
     user = request.user
     method = request.POST.get('method', '').strip()
     password = request.POST.get('password', '')
@@ -582,6 +605,8 @@ class ProfileAPIView(APIView):
         return Response(ProfileSerializer(profile, context={'request': request}).data)
 
     def patch(self, request):
+        if request.user.is_headman and request.user.is_locked:
+            return Response({'detail': LOCKED_HEADMAN_MSG}, status=status.HTTP_403_FORBIDDEN)
         profile, _ = Profile.objects.get_or_create(
             user=request.user,
             defaults={'name': request.user.username},
@@ -610,6 +635,8 @@ class PasswordChangeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        if request.user.is_headman and request.user.is_locked:
+            return Response({'detail': LOCKED_HEADMAN_MSG}, status=status.HTTP_403_FORBIDDEN)
         serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from authentication.models import Role
+from management.decorators import LOCKED_HEADMAN_MSG
 
 
 class AuditMiddleware:
@@ -49,7 +50,6 @@ class HeadmanLockMiddleware:
     SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
     ALLOWED_URL_NAMES = (
         'authentication:logout',
-        'authentication:change_password',
         'authentication:login',
     )
 
@@ -66,7 +66,7 @@ class HeadmanLockMiddleware:
         ):
             resolver_match = request.resolver_match
             if not resolver_match or resolver_match.view_name not in self.ALLOWED_URL_NAMES:
-                msg = '您的账号已被管理员锁定，暂时无法修改数据。'
+                msg = LOCKED_HEADMAN_MSG
                 if request.path.startswith('/api/'):
                     return JsonResponse({'detail': msg}, status=403)
                 messages.error(request, msg)

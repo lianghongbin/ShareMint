@@ -1,0 +1,30 @@
+{% if two_factor_totp_enabled or two_factor_email_enabled %}
+{% include "authentication/settings/_two_factor_disable_modal.html" %}
+<script>
+(function () {
+    var modal = document.getElementById('two-factor-disable-modal');
+    if (!modal) return;
+    var methodInput = document.getElementById('disable-method');
+    var labelEl = document.getElementById('disable-method-label');
+    var emailSend = document.getElementById('disable-email-send');
+    function openModal(method, label) {
+        if (methodInput) methodInput.value = method;
+        if (labelEl) labelEl.textContent = label;
+        if (emailSend) emailSend.hidden = method !== 'email';
+        modal.hidden = false;
+    }
+    function closeModal() { modal.hidden = true; }
+    document.querySelectorAll('[data-2fa-disable-open]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openModal(btn.getAttribute('data-method'), btn.getAttribute('data-label'));
+        });
+    });
+    modal.addEventListener('click', function (e) {
+        if (e.target.closest('[data-modal-close]')) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+})();
+</script>
+{% endif %}

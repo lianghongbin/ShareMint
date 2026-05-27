@@ -4,7 +4,8 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<article class="card detail-section">
+{% include "management/admin/_mobile_system_back.html" %}
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>{% include "includes/icon_shield.html" %} 操作审计</h2>
     </div>

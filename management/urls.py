@@ -10,6 +10,8 @@ urlpatterns = [
     path('admin/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/headmen/', views.admin_headman_list, name='admin_headman_list'),
     path('admin/headmen/create/', views.admin_create_headman, name='admin_create_headman'),
+    path('admin/members/', views.admin_member_list, name='admin_member_list'),
+    path('admin/members/<int:pk>/', views.admin_member_detail, name='admin_member_detail'),
     path('admin/headmen/<int:pk>/', views.admin_headman_detail, name='admin_headman_detail'),
     path('admin/headmen/<int:pk>/toggle-lock/', views.admin_toggle_headman_lock, name='admin_toggle_lock'),
     path('admin/headmen/<int:pk>/reset-password/', views.admin_reset_headman_password, name='admin_reset_headman_password'),
@@ -21,6 +23,8 @@ urlpatterns = [
     path('admin/settings/email/', views.admin_settings_email, name='admin_settings_email'),
     path('admin/settings/audit/', views.admin_settings_audit, name='admin_settings_audit'),
     path('admin/settings/audit/<int:pk>/', views.admin_settings_audit_detail, name='admin_settings_audit_detail'),
+    path('admin/profile/', views.admin_profile, name='admin_profile'),
+    path('admin/menu/', views.admin_mobile_menu, name='admin_mobile_menu'),
     # Headman
     path('headman/', views.headman_dashboard, name='headman_dashboard'),
     path('headman/members/', views.headman_member_list, name='headman_member_list'),

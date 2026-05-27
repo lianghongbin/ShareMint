@@ -1,0 +1,21 @@
+{% load sharemint_extras %}
+<div class="investment-record-block">
+    <div class="investment-record-head" aria-hidden="true">
+        <span>时间</span>
+        <span>金额</span>
+        <span>GDT</span>
+        <span>市值</span>
+    </div>
+    <ul class="investment-record-list">
+        {% for item in investments %}
+        <li class="investment-record-row">
+            <span class="investment-record-cell investment-record-cell--date">{{ item.investment_date|date:"m-d H:i" }}</span>
+            <span class="investment-record-cell">{{ item.investment_amount }}</span>
+            <span class="investment-record-cell">{{ item.holding_quantity|format_gdt }}</span>
+            <span class="investment-record-cell highlight">{{ item.current_market_value|floatformat:2 }}</span>
+        </li>
+        {% empty %}
+        <li class="investment-record-empty text-muted">暂无投资记录</li>
+        {% endfor %}
+    </ul>
+</div>

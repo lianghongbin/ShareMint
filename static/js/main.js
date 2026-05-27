@@ -95,4 +95,82 @@
         form.addEventListener('keydown', onEnter);
         form.addEventListener('keyup', onEnter);
     });
+
+    // Mobile bottom tab bar: hide on scroll up, show on scroll down (only when content > one screen)
+    (function () {
+        var layout = document.querySelector('.has-mobile-tabbar');
+        if (!layout) return;
+
+        var tabbar = layout.querySelector('.mobile-tabbar');
+        var content = layout.querySelector('.app-content');
+        if (!tabbar || !content) return;
+
+        var lastY = window.scrollY || 0;
+        var hidden = false;
+        var ticking = false;
+        var scrollEnabled = false;
+        var THRESHOLD = 6;
+        var MIN_SCROLL = 48;
+
+        function isMobileTabbar() {
+            return window.innerWidth < 1024;
+        }
+
+        function pageIsScrollable() {
+            var tabbarH = tabbar.offsetHeight || 64;
+            var maxVisible = window.innerHeight - tabbarH;
+            return content.scrollHeight > maxVisible + 16;
+        }
+
+        function refreshScrollMode() {
+            scrollEnabled = isMobileTabbar() && pageIsScrollable();
+            if (!scrollEnabled) {
+                setHidden(false);
+                lastY = window.scrollY || 0;
+            }
+        }
+
+        function setHidden(nextHidden) {
+            if (nextHidden && !scrollEnabled) return;
+            if (hidden === nextHidden) return;
+            hidden = nextHidden;
+            tabbar.classList.toggle('is-scroll-hidden', nextHidden);
+            layout.classList.toggle('tabbar-scroll-hidden', nextHidden);
+        }
+
+        function update() {
+            ticking = false;
+            if (!scrollEnabled) return;
+
+            var y = window.scrollY || 0;
+            var delta = y - lastY;
+
+            if (y <= 8) {
+                setHidden(false);
+            } else if (delta > THRESHOLD && y > MIN_SCROLL) {
+                setHidden(true);
+            } else if (delta < -THRESHOLD) {
+                setHidden(false);
+            }
+
+            lastY = y;
+        }
+
+        window.addEventListener('scroll', function () {
+            if (!scrollEnabled) return;
+            if (!ticking) {
+                ticking = true;
+                requestAnimationFrame(update);
+            }
+        }, { passive: true });
+
+        window.addEventListener('resize', refreshScrollMode);
+        window.addEventListener('load', refreshScrollMode);
+
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(refreshScrollMode).observe(content);
+        }
+
+        refreshScrollMode();
+    })();
 })();

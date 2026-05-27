@@ -4,13 +4,14 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<article class="card detail-section">
-    <div class="card-header-row">
+{% include "includes/_mobile_page_header.html" with title="开户" icon="includes/icon_wallet.html" %}
+<article class="card detail-section detail-section--compact">
+    <div class="card-header-row hide-on-mobile">
         <h2>{% include "includes/icon_wallet.html" %} 团长开户</h2>
     </div>
-    <form method="post" class="form-stack">
+    <form method="post" class="form-stack form-stack--compact">
         {% csrf_token %}
-        <div class="form-grid">
+        <div class="form-grid form-grid--compact">
             <div class="form-group">
                 <label for="username">用户名 *</label>
                 <input type="text" name="username" id="username" required placeholder="登录用户名">

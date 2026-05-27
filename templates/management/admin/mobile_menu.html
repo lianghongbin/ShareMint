@@ -1,0 +1,38 @@
+{% extends "layouts/app.html" %}
+{% block title %}更多 · 管理后台{% endblock %}
+{% block page_title %}更多{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section detail-section--compact">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_settings.html" %} 系统与账户</h2>
+    </div>
+    <div class="mobile-menu-list">
+        <a href="{% url 'management:admin_settings_price' %}" class="mobile-menu-item">
+            {% include "includes/icon_coin.html" %}
+            <span>价格设置</span>
+        </a>
+        <a href="{% url 'management:admin_settings_commission' %}" class="mobile-menu-item">
+            {% include "includes/icon_chart.html" %}
+            <span>提成设定</span>
+        </a>
+        <a href="{% url 'management:admin_settings_backup' %}" class="mobile-menu-item">
+            {% include "includes/icon_backup.html" %}
+            <span>备份与恢复</span>
+        </a>
+        <a href="{% url 'management:admin_settings_email' %}" class="mobile-menu-item">
+            {% include "includes/icon_coin.html" %}
+            <span>SMTP 邮件</span>
+        </a>
+        <a href="{% url 'management:admin_settings_audit' %}" class="mobile-menu-item">
+            {% include "includes/icon_shield.html" %}
+            <span>日志审计</span>
+        </a>
+        <a href="{% url 'authentication:settings' %}" class="mobile-menu-item">
+            {% include "includes/icon_settings.html" %}
+            <span>账户与安全</span>
+        </a>
+    </div>
+</article>
+{% endblock %}

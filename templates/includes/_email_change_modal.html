@@ -1,0 +1,10 @@
+<div id="email-change-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-dialog-wide crypto-glow">
+        <button type="button" class="modal-close" data-modal-close aria-label="关闭">&times;</button>
+        <div class="audit-detail-body">
+            <h3>{% include "includes/icon_wallet.html" %} {% if has_current_email %}更换邮箱{% else %}绑定邮箱{% endif %}</h3>
+            {% include "authentication/settings/_change_email_panel.html" with in_modal=True return_to='profile' %}
+        </div>
+    </div>
+</div>

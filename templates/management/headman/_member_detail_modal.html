@@ -37,8 +37,6 @@
     font-weight: 400; font-size: 0.75rem; color: var(--color-muted); white-space: nowrap;
 }
 .member-detail-modal .table-wrap { margin-top: 0.15rem; }
-.member-detail-modal .audit-compare-table th,
-.member-detail-modal .audit-compare-table td { padding: 0.3rem 0.45rem; font-size: 0.82rem; }
 .member-detail-modal .modal-actions { margin-top: 0.65rem; }
 .member-detail-modal .gdt-price-disclaimer { margin: 0 0 0.3rem; }
 .member-detail-modal .card-desc { margin: 0.2rem 0 0.35rem; font-size: 0.78rem; }
@@ -110,36 +108,15 @@
 </div>
 
 <div class="member-section-head"><span>投资记录</span></div>
-<div class="table-wrap">
-    <table class="data-table audit-compare-table">
-        <thead>
-            <tr>
-                <th>投资时间</th>
-                <th>金额 (USDT)</th>
-                <th>持有 (GDT)</th>
-                <th>动态市值</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in investments %}
-            <tr>
-                <td>{{ item.investment_date|date:"Y-m-d H:i" }}</td>
-                <td>{{ item.investment_amount }}</td>
-                <td>{{ item.holding_quantity|format_gdt }}</td>
-                <td class="highlight">{{ item.current_market_value|floatformat:2 }} USDT</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4" class="text-muted empty-cell">暂无投资记录</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="investment-record-block investment-record-block--compact">
+{% include "includes/investment_record_list.html" with investments=investments %}
 </div>
 {% if investments|length >= 50 %}
 <p class="card-desc text-muted">仅展示最近 50 条记录</p>
 {% endif %}
 
 <div class="modal-actions">
-    {% if not is_locked %}
+    {% if show_investment_actions|default:True and not is_locked %}
     <a href="{% url 'management:headman_add_member_investment' member.pk %}" class="btn btn-primary btn-sm">追加投资</a>
     {% endif %}
     <button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button>

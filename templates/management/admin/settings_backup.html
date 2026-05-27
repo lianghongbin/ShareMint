@@ -4,7 +4,8 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<article class="card detail-section">
+{% include "management/admin/_mobile_system_back.html" %}
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>{% include "includes/icon_backup.html" %} 一键备份</h2>
     </div>
@@ -15,7 +16,7 @@
     </form>
 </article>
 
-<article class="card detail-section">
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>{% include "includes/icon_backup.html" %} 一键还原</h2>
     </div>
@@ -37,7 +38,7 @@
 </article>
 
 {% if backups %}
-<article class="card detail-section">
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>备份记录</h2>
     </div>

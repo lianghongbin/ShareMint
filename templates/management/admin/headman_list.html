@@ -4,6 +4,7 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
+{% include "includes/_mobile_page_header.html" with title="团长" icon="includes/icon_users.html" %}
 <div class="page-toolbar">
     <form method="get" class="search-form">
         {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
@@ -11,11 +12,36 @@
         <input type="search" name="q" value="{{ q }}" placeholder="搜索用户名或姓名…">
         <button type="submit" class="btn btn-outline btn-sm">搜索</button>
     </form>
-    <a href="{% url 'management:admin_create_headman' %}" class="btn btn-primary btn-glow btn-sm">{% include "includes/icon_users.html" %} 开户</a>
+    <div class="page-toolbar-actions">
+        <a href="{% url 'management:admin_create_headman' %}" class="btn btn-primary btn-sm">开户</a>
+    </div>
 </div>
 
 <div class="card table-card">
-    <div class="table-wrap">
+    <div class="member-mobile-block">
+        <div class="member-mobile-head" aria-hidden="true">
+            <span>姓名</span>
+            <span>成员</span>
+            <span>投资 (USDT)</span>
+        </div>
+        <ul class="member-mobile-list" aria-label="团长列表">
+            {% for h in headmen %}
+            <li class="member-mobile-row"
+                role="button"
+                tabindex="0"
+                data-href="{% url 'management:admin_headman_detail' h.pk %}"
+                aria-label="查看 {{ h.profile.name|default:h.username }} 详情">
+                <span class="member-mobile-cell member-mobile-cell--name">{{ h.profile.name|default:h.username }}</span>
+                <span class="member-mobile-cell">{{ h.member_count }}</span>
+                <span class="member-mobile-cell highlight">{{ h.total_investment|floatformat:2 }}</span>
+            </li>
+            {% empty %}
+            <li class="member-mobile-empty text-muted">暂无团长，请前往开户</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="table-wrap member-desktop-table">
         <table class="data-table">
             <thead>
                 <tr>
@@ -72,6 +98,16 @@ document.querySelectorAll('.table-row-clickable[data-href]').forEach(function (r
     row.addEventListener('click', function (e) {
         if (e.target.closest('a, button, form')) return;
         window.location = row.dataset.href;
+    });
+});
+document.querySelectorAll('.member-mobile-row[data-href]').forEach(function (row) {
+    function go() { window.location = row.dataset.href; }
+    row.addEventListener('click', go);
+    row.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            go();
+        }
     });
 });
 document.querySelectorAll('.sort-link').forEach(function (link) {

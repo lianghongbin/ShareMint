@@ -1,0 +1,64 @@
+<div id="ios-pwa-install" class="hidden" aria-live="polite">
+    <div class="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[2px]" data-ios-pwa-dismiss></div>
+
+    <div class="fixed inset-x-0 bottom-0 z-[9999] pointer-events-none pb-[env(safe-area-inset-bottom,0px)]">
+        <div class="pointer-events-auto mx-3 mb-3 animate-slide-up">
+            <div class="relative overflow-hidden rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-slate-900/98 to-slate-950/98 px-4 pb-4 pt-3 shadow-[0_-8px_40px_rgba(0,180,255,0.15)] backdrop-blur-xl">
+                <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"></div>
+
+                <button type="button"
+                        class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-white"
+                        data-ios-pwa-dismiss
+                        aria-label="关闭">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <div class="flex items-start gap-3 pr-8">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 ring-1 ring-cyan-400/30">
+                        <svg class="h-6 w-6 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 3v12M8 11l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 19h14" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[15px] font-semibold text-white">添加到主屏幕</p>
+                        <p class="mt-0.5 text-[13px] leading-snug text-slate-300">全屏打开 ShareMint，像原生 App 一样使用</p>
+                    </div>
+                </div>
+
+                <ol class="mt-3 space-y-2 rounded-xl bg-white/5 px-3 py-2.5 text-[13px] text-slate-200">
+                    <li class="flex items-center gap-2">
+                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[11px] font-bold text-cyan-300">1</span>
+                        <span>点击 Safari 底部中间的
+                            <span class="inline-flex align-middle mx-0.5 rounded-md bg-white/10 px-1.5 py-0.5 ring-1 ring-white/15">
+                                <svg class="h-4 w-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M12 5v10M8 11l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M5 19h14" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <strong class="font-semibold text-white">分享</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[11px] font-bold text-cyan-300">2</span>
+                        <span>选择 <strong class="font-semibold text-white">添加到主屏幕</strong></span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="pointer-events-none absolute bottom-[calc(0.35rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2">
+            <div class="flex flex-col items-center animate-arrow-bounce">
+                <span class="mb-1 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-medium tracking-wide text-cyan-200 ring-1 ring-cyan-400/30">
+                    点这里
+                </span>
+                <svg class="h-7 w-7 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,180,255,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M12 5v12" stroke-linecap="round"/>
+                    <path d="M7 14l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>

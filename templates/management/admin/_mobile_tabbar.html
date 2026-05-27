@@ -1,0 +1,27 @@
+<nav class="mobile-tabbar mobile-tabbar--5" aria-label="主导航">
+    <a href="{% url 'management:admin_dashboard' %}" aria-label="概览"
+       class="mobile-tab {% if current_url_name == 'admin_dashboard' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_chart.html" %}</span>
+        <span class="mobile-tab__label">概览</span>
+    </a>
+    <a href="{% url 'management:admin_headman_list' %}" aria-label="团长"
+       class="mobile-tab {% if current_url_name == 'admin_headman_list' or current_url_name == 'admin_headman_detail' or current_url_name == 'admin_toggle_lock' or current_url_name == 'admin_reset_headman_password' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_users.html" %}</span>
+        <span class="mobile-tab__label">团长</span>
+    </a>
+    <a href="{% url 'management:admin_member_list' %}" aria-label="会员"
+       class="mobile-tab {% if current_url_name == 'admin_member_list' or current_url_name == 'admin_member_detail' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_users.html" %}</span>
+        <span class="mobile-tab__label">会员</span>
+    </a>
+    <a href="{% url 'management:admin_create_headman' %}" aria-label="开户"
+       class="mobile-tab {% if current_url_name == 'admin_create_headman' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_wallet.html" %}</span>
+        <span class="mobile-tab__label">开户</span>
+    </a>
+    <a href="{% url 'management:admin_profile' %}" aria-label="我的"
+       class="mobile-tab {% if current_url_name == 'admin_profile' or current_url_name in account_url_names or current_url_name in admin_my_url_names %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_settings.html" %}</span>
+        <span class="mobile-tab__label">我的</span>
+    </a>
+</nav>

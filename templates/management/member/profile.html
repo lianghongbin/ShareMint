@@ -1,40 +1,38 @@
 {% extends "layouts/app.html" %}
-{% block title %}个人资料 · 成员{% endblock %}
-{% block page_title %}个人资料{% endblock %}
+{% block title %}我的 · 成员{% endblock %}
+{% block page_title %}我的{% endblock %}
 {% block sidebar %}{% include "management/member/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<article class="card detail-section">
-    <div class="card-header-row">
-        <h2>{% include "includes/icon_users.html" %} 个人资料</h2>
-    </div>
-    <form method="post" class="form-stack">
-        {% csrf_token %}
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="name">{% include "includes/icon_lock.html" %} 姓名（不可修改）</label>
-                <input type="text" id="name" value="{{ profile.name }}" disabled class="input-readonly">
-            </div>
-            <div class="form-group">
-                <label for="phone">手机号</label>
-                <input type="text" name="phone" id="phone" value="{{ profile.phone }}">
-            </div>
-            <div class="form-group">
-                <label for="wechat">微信号</label>
-                <input type="text" name="wechat" id="wechat" value="{{ profile.wechat }}">
-            </div>
-            <div class="form-group">
-                <label for="email">邮箱</label>
-                {% if profile.email %}
-                <input type="email" id="email" value="{{ profile.email }}" disabled class="input-readonly">
-                <p class="form-hint"><a href="{% url 'authentication:settings_change_email' %}">前往设置更换邮箱</a></p>
-                {% else %}
-                <input type="email" id="email" value="" disabled class="input-readonly" placeholder="未绑定">
-                <p class="form-hint"><a href="{% url 'authentication:settings_change_email' %}">前往设置绑定邮箱</a></p>
-                {% endif %}
-            </div>
+<div class="my-center" data-my-center>
+    <nav class="my-center-tabs hide-on-desktop" role="tablist" aria-label="我的">
+        <button type="button" class="my-center-tab is-active" role="tab" aria-selected="true"
+                data-my-tab="profile">个人资料</button>
+        <button type="button" class="my-center-tab" role="tab" aria-selected="false"
+                data-my-tab="security">账户安全</button>
+    </nav>
+
+    <article class="card detail-section detail-section--compact">
+    <div class="my-center-panel is-active" data-my-panel="profile" role="tabpanel">
+        <div class="card-header-row hide-on-mobile">
+            <h2>{% include "includes/icon_users.html" %} 个人资料</h2>
         </div>
-        <button type="submit" class="btn btn-primary btn-glow">保存资料</button>
-    </form>
-</article>
+        {% include "includes/_my_profile_form.html" with editable_name=False %}
+    </div>
+
+    <div class="my-center-panel" data-my-panel="security" role="tabpanel" hidden>
+        <div class="card-header-row hide-on-mobile">
+            <h2>{% include "includes/icon_settings.html" %} 账户安全</h2>
+        </div>
+        {% include "authentication/settings/_security_panel.html" %}
+    </div>
+    </article>
+</div>
+{% include "includes/_email_change_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/my_center_tabs.js"></script>
+<script src="/static/js/my_profile_edit.js"></script>
+{% include "includes/_my_center_2fa_js.html" %}
 {% endblock %}

@@ -4,7 +4,8 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<article class="card detail-section">
+{% include "management/admin/_mobile_system_back.html" %}
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>{% include "includes/icon_chart.html" %} 提成设定</h2>
     </div>
@@ -66,7 +67,7 @@
     </form>
 </article>
 
-<article class="card detail-section">
+<article class="card detail-section detail-section--compact">
     <div class="card-header-row">
         <h2>当前规则预览</h2>
     </div>

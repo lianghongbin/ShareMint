@@ -3,7 +3,7 @@
 {% block body_class %}page-app{% endblock %}
 
 {% block body %}
-<div class="app-layout">
+<div class="app-layout{% if mobile_tabbar_template %} has-mobile-tabbar{% endif %}">
     <aside class="sidebar" data-sidebar>
         <div class="sidebar-brand">
             <a href="{% url 'authentication:dashboard' %}">
@@ -16,8 +16,8 @@
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user-name">{{ user.username }}</span>
-            <a href="{% url 'authentication:settings' %}"
-               class="sidebar-icon-btn {% if current_url_name == 'settings' or current_url_name == 'settings_two_factor_setup' or current_url_name == 'settings_two_factor_setup_totp' or current_url_name == 'settings_two_factor_setup_email' or current_url_name == 'change_password' %}is-active{% endif %}"
+            <a href="{% if user.is_headman %}{% url 'management:headman_profile' %}?tab=security{% elif user.is_member %}{% url 'management:member_profile' %}?tab=security{% elif user.is_admin %}{% url 'management:admin_profile' %}?tab=security{% else %}{% url 'authentication:settings' %}{% endif %}"
+               class="sidebar-icon-btn {% if current_url_name == 'headman_profile' or current_url_name == 'member_profile' or current_url_name == 'admin_profile' or current_url_name == 'settings' or current_url_name == 'settings_two_factor_setup' or current_url_name == 'settings_two_factor_setup_totp' or current_url_name == 'settings_two_factor_setup_email' or current_url_name == 'change_password' or current_url_name == 'settings_change_email' %}is-active{% endif %}"
                aria-label="设置" title="设置">
                 {% include "includes/icon_settings.html" %}
             </a>
@@ -38,5 +38,9 @@
         </div>
     </div>
     <div class="sidebar-overlay" data-sidebar-overlay></div>
+
+    {% if mobile_tabbar_template %}
+    {% include mobile_tabbar_template %}
+    {% endif %}
 </div>
 {% endblock %}

@@ -4,11 +4,11 @@
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<div class="detail-toolbar">
+<div class="detail-toolbar hide-on-desktop">
     <a href="{% url 'management:admin_settings_audit' %}" class="detail-back">← 返回日志审计</a>
 </div>
 
-<article class="card detail-section audit-detail-panel">
+<article class="card detail-section detail-section--compact audit-detail-panel">
     {% include "management/admin/_audit_detail_modal.html" %}
 </article>
 {% endblock %}

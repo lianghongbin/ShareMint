@@ -1,0 +1,17 @@
+<nav class="mobile-tabbar mobile-tabbar--3" aria-label="主导航">
+    <a href="{% url 'management:member_dashboard' %}" aria-label="资产"
+       class="mobile-tab {% if current_url_name == 'member_dashboard' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_chart.html" %}</span>
+        <span class="mobile-tab__label">资产</span>
+    </a>
+    <a href="{% url 'management:member_investments' %}" aria-label="清册"
+       class="mobile-tab {% if current_url_name == 'member_investments' %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_coin.html" %}</span>
+        <span class="mobile-tab__label">清册</span>
+    </a>
+    <a href="{% url 'management:member_profile' %}" aria-label="我的"
+       class="mobile-tab {% if current_url_name == 'member_profile' or current_url_name in account_url_names %}is-active{% endif %}">
+        <span class="mobile-tab__icon">{% include "includes/icon_settings.html" %}</span>
+        <span class="mobile-tab__label">我的</span>
+    </a>
+</nav>

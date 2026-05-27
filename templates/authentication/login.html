@@ -2,11 +2,38 @@
 
 {% block title %}登录 · ShareMint{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+    corePlugins: { preflight: false },
+    theme: {
+        extend: {
+            keyframes: {
+                'slide-up': {
+                    '0%': { transform: 'translateY(110%)', opacity: '0' },
+                    '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
+                'arrow-bounce': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(10px)' },
+                },
+            },
+            animation: {
+                'slide-up': 'slide-up 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                'arrow-bounce': 'arrow-bounce 1.1s ease-in-out infinite',
+            },
+        },
+    },
+};
+</script>
+{% endblock %}
+
 {% block content %}
 <section class="auth-card crypto-glow">
     <div class="auth-card__header">
         <div class="auth-logo">{% include "includes/icon_logo.html" %}</div>
-        <h1>连接 Web3 分佣网络</h1>
+        <h1>连接财富，共享增长</h1>
         <p>ShareMint · GDT 团长管理平台</p>
     </div>
 
@@ -56,9 +83,12 @@
         </div>
     </div>
 </section>
+
+{% include "includes/_ios_pwa_install_prompt.html" %}
 {% endblock %}
 
 {% block extra_js %}
+<script src="/static/js/ios_pwa_install_prompt.js?v=1"></script>
 <script>
 document.getElementById('login-form')?.addEventListener('submit', function (e) {
     var form = e.target;

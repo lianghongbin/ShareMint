@@ -9,16 +9,18 @@
     <a href="{% url 'management:headman_member_list' %}" class="nav-item {% if current_url_name == 'headman_member_list' or current_url_name == 'headman_member_detail' %}is-active{% endif %}">
         {% include "includes/icon_users.html" %} 成员列表
     </a>
+    {% if not is_locked %}
     <a href="{% url 'management:headman_add_member' %}" class="nav-item {% if current_url_name == 'headman_add_member' %}is-active{% endif %}">
         {% include "includes/icon_wallet.html" %} 录入成员
     </a>
     <a href="{% url 'management:headman_add_investment' %}" class="nav-item {% if current_url_name == 'headman_add_investment' or current_url_name == 'headman_add_member_investment' %}is-active{% endif %}">
         {% include "includes/icon_coin.html" %} 追加投资
     </a>
+    {% endif %}
 </div>
 <div class="nav-group">
     <span class="nav-group-label">账户</span>
-    <a href="{% url 'management:headman_profile' %}" class="nav-item {% if current_url_name == 'headman_profile' %}is-active{% endif %}">
-        {% include "includes/icon_settings.html" %} 个人资料
+    <a href="{% url 'management:headman_profile' %}" class="nav-item {% if current_url_name == 'headman_profile' or current_url_name in account_url_names %}is-active{% endif %}">
+        {% include "includes/icon_settings.html" %} 我的
     </a>
 </div>

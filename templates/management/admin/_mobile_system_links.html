@@ -1,0 +1,32 @@
+<div class="settings-rows settings-rows--compact admin-mobile-system-links">
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main"><strong>价格设置</strong></div>
+            <a href="{% url 'management:admin_settings_price' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main"><strong>提成设定</strong></div>
+            <a href="{% url 'management:admin_settings_commission' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main"><strong>备份与恢复</strong></div>
+            <a href="{% url 'management:admin_settings_backup' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main"><strong>SMTP 邮件</strong></div>
+            <a href="{% url 'management:admin_settings_email' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+    <div class="settings-row">
+        <div class="settings-row-line">
+            <div class="settings-row-main"><strong>日志审计</strong></div>
+            <a href="{% url 'management:admin_settings_audit' %}" class="btn btn-secondary btn-sm">进入</a>
+        </div>
+    </div>
+</div>
