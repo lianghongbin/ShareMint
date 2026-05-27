@@ -1,0 +1,10 @@
+{% extends "layouts/app.html" %}
+{% block title %}导入导出 · 管理后台{% endblock %}
+{% block page_title %}导入导出{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+{% url 'management:admin_member_import_export' as base_url %}
+{% include "includes/_mobile_page_header.html" with title="导入导出" icon="includes/icon_backup.html" %}
+{% include "management/_member_import_export_panel.html" with page_title="团长 · Excel 导入导出" export_desc="导出全部团长基本资料（不含会员与投资信息）。" import_desc="批量新建团长；每行一名团长。会员请由团长自行导入。" export_url=base_url|add:"?export=1" template_url=base_url|add:"?template=1" can_import=True show_gdt_help=False %}
+{% endblock %}

@@ -1,0 +1,56 @@
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_backup.html" %} {{ page_title }}</h2>
+    </div>
+    {% if show_gdt_help %}
+    <p class="card-desc">
+        当前 GDT 价格：<strong>{{ gdt_price|floatformat:8 }}</strong> USDT。
+        成员 GDT 数量 = 投资金额 × (1 − 手续费比例%) ÷ GDT 价格（四舍五入取整）。
+    </p>
+    {% else %}
+    <p class="card-desc">管理员仅批量导入团长；会员由对应团长在其账号下导入。</p>
+    {% endif %}
+
+    <div class="import-export-grid">
+        <section class="import-export-block">
+            <h3 class="subsection-title">一键导出</h3>
+            <p class="card-desc card-desc--compact">{{ export_desc }}</p>
+            <a href="{{ export_url }}" class="btn btn-secondary">导出 EXCEL</a>
+        </section>
+
+        <section class="import-export-block">
+            <h3 class="subsection-title">下载导入模板</h3>
+            <p class="card-desc card-desc--compact">按模板填写后上传，可先下载空白模板参考字段格式。</p>
+            <a href="{{ template_url }}" class="btn btn-outline">下载模板</a>
+        </section>
+
+        {% if can_import %}
+        <section class="import-export-block import-export-block--wide">
+            <h3 class="subsection-title">一键导入</h3>
+            <p class="card-desc card-desc--compact">{{ import_desc }}</p>
+            <form method="post" enctype="multipart/form-data" class="import-export-form">
+                {% csrf_token %}
+                <div class="import-export-file-row">
+                    <input type="file" name="import_file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                    <button type="submit" class="btn btn-primary btn-glow">上传并导入</button>
+                </div>
+            </form>
+        </section>
+        {% else %}
+        <section class="import-export-block import-export-block--wide">
+            <p class="card-desc card-desc--compact text-muted">账号已锁定，仅可导出数据，无法导入。</p>
+        </section>
+        {% endif %}
+    </div>
+
+    {% if import_errors %}
+    <div class="import-export-errors">
+        <h3 class="subsection-title subsection-title--compact">导入错误详情</h3>
+        <ul class="import-export-error-list">
+            {% for err in import_errors %}
+            <li>第 {{ err.row }} 行：{{ err.message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</article>

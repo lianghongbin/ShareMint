@@ -17,8 +17,13 @@
     </form>
     {% if not is_locked %}
     <div class="page-toolbar-actions">
-        <a href="{% url 'management:headman_add_investment' %}" class="btn btn-outline btn-sm">追加投资</a>
         <a href="{% url 'management:headman_add_member' %}" class="btn btn-primary btn-sm">录入成员</a>
+        <a href="{% url 'management:headman_add_investment' %}" class="btn btn-outline btn-sm">追加投资</a>
+        <a href="{% url 'management:headman_member_import_export' %}" class="btn btn-outline btn-sm">导入导出</a>
+    </div>
+    {% else %}
+    <div class="page-toolbar-actions">
+        <a href="{% url 'management:headman_member_import_export' %}" class="btn btn-outline btn-sm">导出</a>
     </div>
     {% endif %}
 </div>

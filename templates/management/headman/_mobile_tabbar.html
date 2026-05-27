@@ -5,7 +5,7 @@
         <span class="mobile-tab__label">概览</span>
     </a>
     <a href="{% url 'management:headman_member_list' %}" aria-label="成员"
-       class="mobile-tab {% if current_url_name == 'headman_member_list' or current_url_name == 'headman_member_detail' or current_url_name == 'headman_add_member' %}is-active{% endif %}">
+       class="mobile-tab {% if current_url_name == 'headman_member_list' or current_url_name == 'headman_member_detail' or current_url_name == 'headman_add_member' or current_url_name == 'headman_member_import_export' %}is-active{% endif %}">
         <span class="mobile-tab__icon">{% include "includes/icon_users.html" %}</span>
         <span class="mobile-tab__label">成员</span>
     </a>

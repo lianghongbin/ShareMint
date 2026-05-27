@@ -16,6 +16,14 @@
             <input type="search" name="q" value="{{ q }}" placeholder="搜索操作者、操作类型…">
             <button type="submit" class="btn btn-outline btn-sm">搜索</button>
         </form>
+        <div class="page-toolbar-actions">
+            <form method="post" action="{% url 'management:admin_settings_audit_clear' %}"
+                  onsubmit="return confirm('此操作不可恢复，清空后将仅保留本次清空记录。');">
+                {% csrf_token %}
+                <input type="hidden" name="confirmed" value="1">
+                <button type="submit" class="btn btn-danger btn-sm">一键清空日志</button>
+            </form>
+        </div>
     </div>
 </article>
 

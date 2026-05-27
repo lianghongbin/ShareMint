@@ -20,6 +20,9 @@
         <input type="search" name="q" value="{{ q }}" placeholder="搜索用户名或姓名…">
         <button type="submit" class="btn btn-outline btn-sm">搜索</button>
     </form>
+    <div class="page-toolbar-actions">
+        <a href="{% url 'management:admin_member_import_export' %}" class="btn btn-outline btn-sm">导入导出</a>
+    </div>
 </div>
 
 <div class="card table-card">

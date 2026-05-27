@@ -32,6 +32,7 @@ VIEW_ACTION_SUMMARIES = {
     'management:admin_settings_email': '保存邮件配置',
     'management:admin_backup': '数据备份',
     'management:admin_restore': '数据还原',
+    'management:admin_settings_audit_clear': '清空操作日志',
     'management:headman_profile': '更新个人资料',
     'management:headman_add_member': '录入成员',
     'management:headman_add_investment': '成员追加投资',

@@ -1,4 +1,6 @@
+import tempfile
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,6 +15,7 @@ from django.views.decorators.http import require_http_methods
 
 from authentication.models import Role, User
 from authentication.settings_context import build_settings_context
+from authentication.email_change import validate_new_email
 from authentication.email_change_context import build_email_change_context
 from authentication.users import is_username_taken
 from authentication.providers import get_provider
@@ -27,13 +30,21 @@ from management.decorators import (
     reject_locked_headman,
 )
 from management.models import AuditLog, Investment, Profile
-from management.services.backup import create_backup, list_backups, restore_backup
+from management.services.backup import build_backup, restore_backup
 from management.services.dashboard import get_admin_dashboard_context, get_headman_dashboard_context
 from management.services.audit import (
     email_settings_snapshot,
     profile_snapshot,
     record_audit,
     record_update_audit,
+)
+from management.services.member_import_export import (
+    build_admin_template_workbook,
+    build_headman_template_workbook,
+    export_admin_workbook,
+    export_headman_workbook,
+    import_admin_workbook,
+    import_headman_workbook,
 )
 from management.services.email_config import (
     EMAIL_MODE_CONSOLE,
@@ -306,7 +317,13 @@ def admin_headman_detail(request, pk):
         profile.name = name
         profile.phone = request.POST.get('phone', '').strip()
         profile.wechat = request.POST.get('wechat', '').strip()
-        profile.email = request.POST.get('email', '').strip()
+        new_email = request.POST.get('email', '').strip()
+        if new_email:
+            email_error = validate_new_email(headman, new_email)
+            if email_error:
+                messages.error(request, email_error)
+                return redirect('management:admin_headman_detail', pk=pk)
+        profile.email = new_email
         profile.save()
         headman.email = profile.email
         headman.save(update_fields=['email'])
@@ -349,11 +366,14 @@ def admin_create_headman(request):
         phone = request.POST.get('phone', '').strip()
         wechat = request.POST.get('wechat', '').strip()
         email = request.POST.get('email', '').strip()
+        email_error = validate_new_email(User(), email) if email else None
 
         if not username or not password or not name:
             messages.error(request, '用户名、密码、姓名为必填项。')
         elif is_username_taken(username):
             messages.error(request, '用户名已存在。')
+        elif email_error:
+            messages.error(request, email_error)
         else:
             with transaction.atomic():
                 user = User.objects.create_user(
@@ -516,10 +536,7 @@ def admin_settings_commission(request):
 
 @admin_required
 def admin_settings_backup(request):
-    backups = list_backups()
-    return render(request, 'management/admin/settings_backup.html', {
-        'backups': backups,
-    })
+    return render(request, 'management/admin/settings_backup.html')
 
 
 @admin_required
@@ -589,35 +606,48 @@ def admin_settings_email(request):
 @admin_required
 @require_http_methods(['POST'])
 def admin_backup(request):
-    filepath = create_backup()
+    from django.http import HttpResponse
+
+    filename, content = build_backup()
     record_audit(
         request,
         action='management:admin_backup',
-        after={'备份文件': filepath.name},
+        after={'备份文件': filename},
     )
-    messages.success(request, f'备份成功：{filepath.name}')
-    return redirect('management:admin_settings_backup')
+    response = HttpResponse(content, content_type='application/json; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @admin_required
 @require_http_methods(['POST'])
 def admin_restore(request):
-    filename = request.POST.get('backup_file', '')
-    backups = {b.name: b for b in list_backups()}
-    if filename not in backups:
-        messages.error(request, '备份文件不存在。')
+    upload = request.FILES.get('backup_file')
+    if not upload:
+        messages.error(request, '请选择备份文件。')
         return redirect('management:admin_settings_backup')
+    if not upload.name.lower().endswith('.json'):
+        messages.error(request, '请上传 JSON 格式的备份文件。')
+        return redirect('management:admin_settings_backup')
+    tmp_path = None
     try:
-        restore_backup(backups[filename])
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as tmp:
+            for chunk in upload.chunks():
+                tmp.write(chunk)
+            tmp_path = Path(tmp.name)
+        restore_backup(tmp_path)
         record_audit(
             request,
             action='management:admin_restore',
-            after={'还原文件': filename},
+            after={'还原文件': upload.name},
             note='已用备份覆盖当前数据库。',
         )
-        messages.success(request, f'已从 {filename} 还原数据。')
+        messages.success(request, f'已从 {upload.name} 还原数据。')
     except Exception as exc:
         messages.error(request, f'还原失败：{exc}')
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
     return redirect('management:admin_settings_backup')
 
 
@@ -639,6 +669,26 @@ def admin_settings_audit(request):
         'logs': page_obj,
         'q': q,
     })
+
+
+@admin_required
+@require_http_methods(['POST'])
+def admin_settings_audit_clear(request):
+    if request.POST.get('confirmed') != '1':
+        messages.error(request, '请先确认后再清空日志。')
+        return redirect('management:admin_settings_audit')
+
+    count = AuditLog.objects.count()
+    with transaction.atomic():
+        AuditLog.objects.all().delete()
+        record_audit(
+            request,
+            action='management:admin_settings_audit_clear',
+            summary='清空操作日志',
+            after={'已删除记录数': count},
+        )
+    messages.success(request, f'已清空 {count} 条操作日志。')
+    return redirect('management:admin_settings_audit')
 
 
 @admin_required
@@ -768,11 +818,14 @@ def headman_add_member(request):
         email = request.POST.get('email', '').strip()
         investment_amount = request.POST.get('investment_amount', '').strip() or '0'
         holding_quantity = request.POST.get('holding_quantity', '').strip() or '0'
+        email_error = validate_new_email(User(), email) if email else None
 
         if not all([username, password, name]):
             messages.error(request, '用户名、密码、姓名为必填项。')
         elif is_username_taken(username):
             messages.error(request, '用户名已存在。')
+        elif email_error:
+            messages.error(request, email_error)
         else:
             try:
                 with transaction.atomic():
@@ -890,6 +943,9 @@ def headman_add_investment(request, pk=None):
 def member_dashboard(request):
     investments = Investment.objects.filter(user=request.user)
     gdt_price = SystemConfig.get_gdt_price()
+    total_investment = investments.aggregate(
+        total=Coalesce(Sum('investment_amount'), Value(Decimal('0')), output_field=DecimalField(max_digits=18, decimal_places=2)),
+    )['total']
     total_market_value = sum((i.current_market_value for i in investments), Decimal('0'))
     referrer_profile = None
     if request.user.referrer and hasattr(request.user.referrer, 'profile'):
@@ -897,6 +953,7 @@ def member_dashboard(request):
     return render(request, 'management/member/dashboard.html', {
         'investment_count': investments.count(),
         'gdt_price': gdt_price,
+        'total_investment': total_investment,
         'total_market_value': total_market_value,
         'referrer_profile': referrer_profile,
     })
@@ -944,6 +1001,143 @@ def member_profile(request):
             **build_email_change_context(request),
         },
     )
+
+
+def _xlsx_response(content: bytes, filename: str):
+    from django.http import HttpResponse
+
+    response = HttpResponse(
+        content,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@admin_required
+@require_http_methods(['GET', 'POST'])
+def admin_member_import_export(request):
+    if request.method == 'GET':
+        if request.GET.get('template') == '1':
+            return _xlsx_response(
+                build_admin_template_workbook(),
+                'ShareMint_团长_导入模板.xlsx',
+            )
+        if request.GET.get('export') == '1':
+            record_audit(
+                request,
+                action='management:admin_member_export',
+                after={'说明': '导出全部团长 Excel'},
+            )
+            return _xlsx_response(
+                export_admin_workbook(),
+                'ShareMint_团长_导出.xlsx',
+            )
+
+    if request.method == 'POST':
+        upload = request.FILES.get('import_file')
+        if not upload:
+            messages.error(request, '请选择 Excel 文件。')
+            return redirect('management:admin_member_import_export')
+        if not upload.name.lower().endswith('.xlsx'):
+            messages.error(request, '请上传 .xlsx 格式的 Excel 文件。')
+            return redirect('management:admin_member_import_export')
+        result = import_admin_workbook(upload)
+        if result.errors:
+            request.session['import_export_errors'] = [
+                {'row': err.row_number, 'message': err.message}
+                for err in result.errors
+            ]
+        else:
+            request.session.pop('import_export_errors', None)
+        if result.created_headmen:
+            record_audit(
+                request,
+                action='management:admin_member_import',
+                after={
+                    '新建团长': result.created_headmen,
+                    '文件名': upload.name,
+                },
+            )
+            messages.success(
+                request,
+                f'导入完成：新建 {result.created_headmen} 名团长。',
+            )
+        elif not result.errors:
+            messages.warning(request, '文件中没有可导入的数据。')
+        if result.errors:
+            messages.error(request, f'导入过程中有 {len(result.errors)} 处错误，请查看下方详情。')
+        return redirect('management:admin_member_import_export')
+
+    import_errors = request.session.pop('import_export_errors', [])
+    return render(request, 'management/admin/member_import_export.html', {
+        'import_errors': import_errors,
+    })
+
+
+@headman_required
+@require_http_methods(['GET', 'POST'])
+def headman_member_import_export(request):
+    if request.method == 'GET':
+        if request.GET.get('template') == '1':
+            return _xlsx_response(
+                build_headman_template_workbook(),
+                'ShareMint_团队成员_导入模板.xlsx',
+            )
+        if request.GET.get('export') == '1':
+            record_audit(
+                request,
+                action='management:headman_member_export',
+                after={'说明': '导出团队成员 Excel'},
+            )
+            return _xlsx_response(
+                export_headman_workbook(request.user),
+                'ShareMint_团队成员_导出.xlsx',
+            )
+
+    blocked = reject_locked_headman(request, redirect_to='management:headman_member_import_export')
+    if blocked:
+        return blocked
+
+    if request.method == 'POST':
+        upload = request.FILES.get('import_file')
+        if not upload:
+            messages.error(request, '请选择 Excel 文件。')
+            return redirect('management:headman_member_import_export')
+        if not upload.name.lower().endswith('.xlsx'):
+            messages.error(request, '请上传 .xlsx 格式的 Excel 文件。')
+            return redirect('management:headman_member_import_export')
+        result = import_headman_workbook(request.user, upload)
+        if result.errors:
+            request.session['import_export_errors'] = [
+                {'row': err.row_number, 'message': err.message}
+                for err in result.errors
+            ]
+        else:
+            request.session.pop('import_export_errors', None)
+        if result.created_members:
+            record_audit(
+                request,
+                action='management:headman_member_import',
+                after={
+                    '新建成员': result.created_members,
+                    '文件名': upload.name,
+                },
+            )
+            messages.success(request, f'导入完成：新建 {result.created_members} 名成员。')
+        elif not result.errors:
+            messages.warning(request, '文件中没有可导入的数据。')
+        if result.errors:
+            messages.error(request, f'导入过程中有 {len(result.errors)} 处错误，请查看下方详情。')
+        return redirect('management:headman_member_import_export')
+
+    import_errors = request.session.pop('import_export_errors', [])
+    return render(request, 'management/headman/member_import_export.html', {
+        'gdt_price': SystemConfig.get_gdt_price(),
+        'import_errors': import_errors,
+        'is_locked': request.user.is_locked,
+        'can_import': not request.user.is_locked,
+    })
 
 
 # ── OAuth 预留 ─────────────────────────────────────────────────────

@@ -64,6 +64,15 @@ class SystemConfig(models.Model):
         return obj
 
     @classmethod
+    def ensure_default(cls, key: str, value: str, description: str = '') -> 'SystemConfig':
+        """仅当配置不存在时写入默认值，不覆盖已有配置。"""
+        obj, created = cls.objects.get_or_create(
+            key=key,
+            defaults={'value': value, 'description': description},
+        )
+        return obj
+
+    @classmethod
     def get_gdt_price(cls) -> Decimal:
         return cls.get_decimal(GDT_CURRENT_PRICE_KEY, DEFAULT_GDT_PRICE)
 
@@ -73,22 +82,22 @@ class SystemConfig(models.Model):
 
     @classmethod
     def seed_defaults(cls):
-        cls.set_value(
+        cls.ensure_default(
             GDT_CURRENT_PRICE_KEY,
             str(DEFAULT_GDT_PRICE),
             'GDT 当前全局唯一价格',
         )
-        cls.set_value(
+        cls.ensure_default(
             COMMISSION_TIERS_KEY,
             json.dumps(DEFAULT_COMMISSION_TIERS),
             '团长阶梯提成比例 JSON 配置',
         )
-        cls.set_value(
+        cls.ensure_default(
             HEADMAN_BASE_BONUS_RATE_KEY,
             str(DEFAULT_HEADMAN_BASE_BONUS_RATE),
             '大团长基础奖励比例',
         )
-        cls.set_value(
+        cls.ensure_default(
             HEADMAN_BASE_BONUS_CURRENCY_KEY,
             DEFAULT_HEADMAN_BASE_BONUS_CURRENCY,
             '大团长基础奖励发放币种 (USDT/GDT)',

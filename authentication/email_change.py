@@ -3,7 +3,6 @@ import time
 from django.core import signing
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 
 from authentication.constants import (
     EMAIL_CHANGE_OLD_VERIFIED_AT_KEY,
@@ -20,6 +19,7 @@ from authentication.two_factor import (
     generate_email_otp,
     mask_email,
 )
+from management.models import Profile
 from management.services.email_config import is_smtp_enabled, send_system_email
 
 EMAIL_CHANGE_OLD_VERIFIED_MAX_AGE = 900
@@ -134,6 +134,19 @@ def verify_new_email_code(session, token: str) -> bool:
     return _verify_stored_otp(session, otp_key, salt, token)
 
 
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def email_is_taken_by_other_user(user, email: str) -> bool:
+    email = normalize_email(email)
+    if not email:
+        return False
+    if User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+        return True
+    return Profile.objects.filter(email__iexact=email).exclude(user_id=user.pk).exists()
+
+
 def validate_new_email(user, new_email: str) -> str | None:
     new_email = new_email.strip()
     if not new_email:
@@ -144,21 +157,20 @@ def validate_new_email(user, new_email: str) -> str | None:
         return '邮箱格式不正确。'
 
     current = get_current_user_email(user)
-    if current and new_email.lower() == current.lower():
+    if current and normalize_email(new_email) == normalize_email(current):
         return '新邮箱不能与当前邮箱相同。'
 
-    taken = User.objects.filter(
-        Q(email__iexact=new_email) | Q(profile__email__iexact=new_email),
-    ).exclude(pk=user.pk).exists()
-    if taken:
-        return '该邮箱已被其他账号使用。'
+    if email_is_taken_by_other_user(user, new_email):
+        return '该邮箱已被其他账号绑定，无法重复绑定。'
     return None
 
 
 def apply_user_email_change(user, new_email: str) -> None:
-    from management.models import Profile
+    error = validate_new_email(user, new_email)
+    if error:
+        raise ValueError(error)
 
-    new_email = new_email.strip()
+    new_email = normalize_email(new_email)
     profile, _ = Profile.objects.get_or_create(
         user=user,
         defaults={'name': user.username},

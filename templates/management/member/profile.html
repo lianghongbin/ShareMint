@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="my-center" data-my-center>
-    <nav class="my-center-tabs hide-on-desktop" role="tablist" aria-label="我的">
+    <nav class="my-center-tabs" role="tablist" aria-label="我的">
         <button type="button" class="my-center-tab is-active" role="tab" aria-selected="true"
                 data-my-tab="profile">个人资料</button>
         <button type="button" class="my-center-tab" role="tab" aria-selected="false"
@@ -14,16 +14,10 @@
 
     <article class="card detail-section detail-section--compact">
     <div class="my-center-panel is-active" data-my-panel="profile" role="tabpanel">
-        <div class="card-header-row hide-on-mobile">
-            <h2>{% include "includes/icon_users.html" %} 个人资料</h2>
-        </div>
         {% include "includes/_my_profile_form.html" with editable_name=False %}
     </div>
 
     <div class="my-center-panel" data-my-panel="security" role="tabpanel" hidden>
-        <div class="card-header-row hide-on-mobile">
-            <h2>{% include "includes/icon_settings.html" %} 账户安全</h2>
-        </div>
         {% include "authentication/settings/_security_panel.html" %}
     </div>
     </article>

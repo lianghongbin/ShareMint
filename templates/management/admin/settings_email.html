@@ -1,13 +1,13 @@
 {% extends "layouts/app.html" %}
-{% block title %}SMTP 邮件 · 系统设置{% endblock %}
-{% block page_title %}SMTP 邮件{% endblock %}
+{% block title %}邮箱设置 · 系统设置{% endblock %}
+{% block page_title %}邮箱设置{% endblock %}
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
 {% include "management/admin/_mobile_system_back.html" %}
 <article class="card detail-section detail-section--compact">
     <div class="card-header-row">
-        <h2>{% include "includes/icon_coin.html" %} SMTP 邮件</h2>
+        <h2>{% include "includes/icon_coin.html" %} 邮箱设置</h2>
     </div>
     <p class="card-desc">生产环境请选择 <strong>SMTP</strong> 并保存后，测试邮件才会真正发出；开发模式只会打印到服务器控制台。</p>
     {% if not smtp_active and config.host %}

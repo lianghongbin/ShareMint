@@ -167,11 +167,11 @@ def dashboard_view(request):
 def settings_center_view(request):
     user = request.user
     if user.is_headman:
-        return redirect(f'{reverse("management:headman_profile")}?tab=security')
+        return redirect('management:headman_profile')
     if user.is_member:
-        return redirect(f'{reverse("management:member_profile")}?tab=security')
+        return redirect('management:member_profile')
     if user.is_admin:
-        return redirect(f'{reverse("management:admin_profile")}?tab=security')
+        return redirect('management:admin_profile')
 
     return render(
         request,
@@ -290,7 +290,11 @@ def settings_change_email_view(request):
                         defaults={'name': user.username},
                     )
                     before = profile_snapshot(profile)
-                    apply_user_email_change(user, pending_new)
+                    try:
+                        apply_user_email_change(user, pending_new)
+                    except ValueError as exc:
+                        messages.error(request, str(exc))
+                        return redirect(get_email_change_redirect_url(request, ongoing=True))
                     profile.refresh_from_db()
                     record_update_audit(
                         request,

@@ -4,12 +4,19 @@
 {% block sidebar %}{% include "management/member/_sidebar.html" %}{% endblock %}
 
 {% block content %}
-<div class="stat-grid stat-grid-3">
+<div class="stat-grid stat-grid-3 stat-grid-member-dashboard">
     <article class="stat-card crypto-glow">
         <div class="stat-icon">{% include "includes/icon_chart.html" %}</div>
         <div class="stat-body">
             <span class="stat-label">资产总市值</span>
             <strong class="stat-value">{{ total_market_value|floatformat:2 }} USDT</strong>
+        </div>
+    </article>
+    <article class="stat-card hide-on-mobile">
+        <div class="stat-icon">{% include "includes/icon_wallet.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">资金金额</span>
+            <strong class="stat-value">{{ total_investment|floatformat:2 }} <small>USDT</small></strong>
         </div>
     </article>
     <article class="stat-card">

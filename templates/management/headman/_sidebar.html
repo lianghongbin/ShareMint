@@ -17,10 +17,7 @@
         {% include "includes/icon_coin.html" %} 追加投资
     </a>
     {% endif %}
-</div>
-<div class="nav-group">
-    <span class="nav-group-label">账户</span>
-    <a href="{% url 'management:headman_profile' %}" class="nav-item {% if current_url_name == 'headman_profile' or current_url_name in account_url_names %}is-active{% endif %}">
-        {% include "includes/icon_settings.html" %} 我的
+    <a href="{% url 'management:headman_member_import_export' %}" class="nav-item {% if current_url_name == 'headman_member_import_export' %}is-active{% endif %}">
+        {% include "includes/icon_backup.html" %} 导入导出
     </a>
 </div>

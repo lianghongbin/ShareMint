@@ -16,9 +16,9 @@
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user-name">{{ user.username }}</span>
-            <a href="{% if user.is_headman %}{% url 'management:headman_profile' %}?tab=security{% elif user.is_member %}{% url 'management:member_profile' %}?tab=security{% elif user.is_admin %}{% url 'management:admin_profile' %}?tab=security{% else %}{% url 'authentication:settings' %}{% endif %}"
-               class="sidebar-icon-btn {% if current_url_name == 'headman_profile' or current_url_name == 'member_profile' or current_url_name == 'admin_profile' or current_url_name == 'settings' or current_url_name == 'settings_two_factor_setup' or current_url_name == 'settings_two_factor_setup_totp' or current_url_name == 'settings_two_factor_setup_email' or current_url_name == 'change_password' or current_url_name == 'settings_change_email' %}is-active{% endif %}"
-               aria-label="设置" title="设置">
+            <a href="{% if user.is_headman %}{% url 'management:headman_profile' %}{% elif user.is_member %}{% url 'management:member_profile' %}{% elif user.is_admin %}{% url 'management:admin_profile' %}{% else %}{% url 'authentication:settings' %}{% endif %}"
+               class="sidebar-icon-btn {% if current_url_name == 'headman_profile' or current_url_name == 'member_profile' or current_url_name == 'admin_profile' or current_url_name in account_url_names %}is-active{% endif %}"
+               aria-label="我的" title="我的">
                 {% include "includes/icon_settings.html" %}
             </a>
         </div>

@@ -438,6 +438,11 @@ button.btn { line-height: 1.2; }
 @media (min-width: 480px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 900px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (min-width: 640px) { .stat-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) {
+    .stat-grid-member-dashboard.stat-grid-3 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
 
 .stat-card {
     display: flex; align-items: center; gap: var(--space-md);
@@ -1741,12 +1746,7 @@ code {
 @media (min-width: 1024px) {
     .hide-on-desktop { display: none !important; }
     .my-center-panel[hidden] {
-        display: block !important;
-    }
-    .my-center-panel + .my-center-panel {
-        margin-top: var(--space-lg);
-        padding-top: var(--space-lg);
-        border-top: 1px solid var(--color-border);
+        display: none !important;
     }
 }
 
@@ -1852,6 +1852,49 @@ code {
     font-size: 0.82rem;
 }
 .member-detail-modal .card-desc { margin: 0.25rem 0 0.5rem; font-size: 0.78rem; }
+
+.import-export-grid {
+    display: grid;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+@media (min-width: 768px) {
+    .import-export-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .import-export-block--wide {
+        grid-column: 1 / -1;
+    }
+}
+.import-export-block {
+    padding: var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-elevated);
+}
+.import-export-form { margin-top: var(--space-sm); }
+.import-export-file-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    align-items: center;
+}
+.import-export-file-row input[type="file"] {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+.import-export-errors {
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+}
+.import-export-error-list {
+    margin: var(--space-sm) 0 0;
+    padding-left: 1.25rem;
+    color: var(--color-error);
+    font-size: 0.9rem;
+}
+.import-export-error-list li + li { margin-top: 0.35rem; }
 .member-detail-modal .modal-actions { margin-top: 0.75rem; }
 .audit-compare-table td:nth-child(2) { color: var(--color-muted); }
 .audit-compare-table td:nth-child(3) { color: var(--color-primary); font-weight: 600; }

@@ -29,6 +29,7 @@ class AuditMiddleware:
         if view_name in (
             'management:admin_settings_audit',
             'management:admin_settings_audit_detail',
+            'management:admin_settings_audit_clear',
         ):
             return response
 

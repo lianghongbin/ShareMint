@@ -1,6 +1,6 @@
 {% extends "layouts/app.html" %}
-{% block title %}备份与恢复 · 系统设置{% endblock %}
-{% block page_title %}备份与恢复{% endblock %}
+{% block title %}备份恢复 · 系统设置{% endblock %}
+{% block page_title %}备份恢复{% endblock %}
 {% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     <div class="card-header-row">
         <h2>{% include "includes/icon_backup.html" %} 一键备份</h2>
     </div>
-    <p class="card-desc">导出全量 JSON 数据至 backups/ 目录，可用于灾难恢复。</p>
+    <p class="card-desc">下载全量 JSON 备份文件到本地，可用于灾难恢复。</p>
     <form method="post" action="{% url 'management:admin_backup' %}" class="form-stack">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary btn-glow">立即备份</button>
@@ -21,37 +21,13 @@
         <h2>{% include "includes/icon_backup.html" %} 一键还原</h2>
     </div>
     <p class="card-desc text-warning">还原将覆盖当前数据库，请谨慎操作。</p>
-    <form method="post" action="{% url 'management:admin_restore' %}" class="form-stack">
+    <form method="post" action="{% url 'management:admin_restore' %}" enctype="multipart/form-data" class="form-stack">
         {% csrf_token %}
         <div class="form-group">
             <label for="backup_file">选择备份文件</label>
-            <select name="backup_file" id="backup_file" required {% if not backups %}disabled{% endif %}>
-                {% for b in backups %}
-                <option value="{{ b.name }}">{{ b.name }}</option>
-                {% empty %}
-                <option value="">暂无备份</option>
-                {% endfor %}
-            </select>
+            <input type="file" name="backup_file" id="backup_file" accept=".json,application/json" required>
         </div>
-        <button type="submit" class="btn btn-danger" {% if not backups %}disabled{% endif %}>还原数据</button>
+        <button type="submit" class="btn btn-danger">还原数据</button>
     </form>
 </article>
-
-{% if backups %}
-<article class="card detail-section detail-section--compact">
-    <div class="card-header-row">
-        <h2>备份记录</h2>
-    </div>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead><tr><th>文件名</th></tr></thead>
-            <tbody>
-                {% for b in backups %}
-                <tr><td>{{ b.name }}</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</article>
-{% endif %}
 {% endblock %}

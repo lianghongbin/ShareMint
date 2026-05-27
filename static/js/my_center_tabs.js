@@ -26,6 +26,13 @@
 
     var initial = new URLSearchParams(window.location.search).get('tab');
     if (initial === 'security' || initial === 'profile' || initial === 'system') {
+        if (initial === 'system') {
+            var systemTab = root.querySelector('[data-my-tab="system"]');
+            if (systemTab && systemTab.classList.contains('hide-on-desktop')
+                && window.matchMedia('(min-width: 1024px)').matches) {
+                initial = 'profile';
+            }
+        }
         showTab(initial);
     }
 })();
