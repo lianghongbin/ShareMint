@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="flash-stack" aria-live="polite">
+    {% for message in messages %}
+    <div class="flash-message alert alert-{% if 'error' in message.tags %}error{% elif 'warning' in message.tags %}warning{% elif 'success' in message.tags %}success{% else %}info{% endif %}" role="alert">
+        <span class="flash-message__text">{{ message }}</span>
+        <button type="button" class="flash-message__close" aria-label="关闭">&times;</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

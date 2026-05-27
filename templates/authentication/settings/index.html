@@ -1,0 +1,144 @@
+{% extends "layouts/app.html" %}
+{% block title %}设置 · ShareMint{% endblock %}
+{% block page_title %}设置{% endblock %}
+{% block sidebar %}{% include sidebar_template %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_settings.html" %} 账户与安全</h2>
+    </div>
+    <p class="card-desc">管理登录密码、二次验证与账户状态</p>
+
+    <div class="settings-rows">
+        <div class="settings-row">
+            <div class="settings-row-line">
+                <div class="settings-row-main">
+                    <strong>{% include "includes/icon_lock.html" %} 登录密码</strong>
+                    <span>定期更换密码，降低账户被盗风险</span>
+                </div>
+                <a href="{% url 'authentication:change_password' %}" class="btn btn-secondary btn-sm">修改密码</a>
+            </div>
+        </div>
+
+        <div class="settings-row">
+            <div class="settings-row-line">
+                <div class="settings-row-main">
+                    <strong>{% include "includes/icon_wallet.html" %} 通知邮箱</strong>
+                    {% if has_notification_email %}
+                    <span>当前：{{ notification_email }} · 用于二次验证、密码重置等</span>
+                    {% else %}
+                    <span>尚未绑定邮箱，绑定后可开启邮件二次验证</span>
+                    {% endif %}
+                </div>
+                <a href="{% url 'authentication:settings_change_email' %}" class="btn btn-secondary btn-sm">
+                    {% if has_notification_email %}更换邮箱{% else %}绑定邮箱{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <div class="settings-row settings-row--section-head">
+            <div class="settings-row-main">
+                <strong>{% include "includes/icon_shield.html" %} 登录二次验证 (2FA)</strong>
+                <span>可同时开启两种方式，登录时需分别验证；也可单独关闭其中一种</span>
+            </div>
+        </div>
+
+        <div class="settings-row settings-row--sub">
+            <div class="settings-row-line">
+                <div class="settings-row-main">
+                    <strong>验证器 App</strong>
+                    <span>Google Authenticator 等 App 动态码，离线可用</span>
+                </div>
+                <div class="settings-row-actions">
+                    {% if two_factor_totp_enabled %}
+                    <span class="badge badge-success">已开启</span>
+                    <button type="button" class="btn btn-outline btn-sm" data-2fa-disable-open data-method="totp" data-label="验证器 App">关闭</button>
+                    {% else %}
+                    <span class="badge badge-muted">未开启</span>
+                    <a href="{% url 'authentication:settings_two_factor_setup_totp' %}" class="btn btn-primary btn-sm btn-glow">开启</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-row settings-row--sub">
+            <div class="settings-row-line">
+                <div class="settings-row-main">
+                    <strong>邮件验证</strong>
+                    {% if notification_email %}
+                    <span>验证码发送至 {{ notification_email }}</span>
+                    {% else %}
+                    <span>请先在设置中心绑定邮箱后再开启</span>
+                    {% endif %}
+                </div>
+                <div class="settings-row-actions">
+                    {% if two_factor_email_enabled %}
+                    <span class="badge badge-success">已开启</span>
+                    <button type="button" class="btn btn-outline btn-sm" data-2fa-disable-open data-method="email" data-label="邮件验证">关闭</button>
+                    {% elif notification_email %}
+                    <span class="badge badge-muted">未开启</span>
+                    <a href="{% url 'authentication:settings_two_factor_setup_email' %}" class="btn btn-primary btn-sm btn-glow">开启</a>
+                    {% else %}
+                    <span class="badge badge-muted">未开启</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-row">
+            <div class="settings-row-line">
+                <div class="settings-row-main">
+                    <strong>{% include "includes/icon_wallet.html" %} 退出登录</strong>
+                    <span>退出当前账户并返回登录页</span>
+                </div>
+                <a href="{% url 'authentication:logout' %}" class="btn btn-outline btn-sm">退出</a>
+            </div>
+        </div>
+    </div>
+</article>
+
+{% if two_factor_totp_enabled or two_factor_email_enabled %}
+{% include "authentication/settings/_two_factor_disable_modal.html" %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if two_factor_totp_enabled or two_factor_email_enabled %}
+<script>
+(function () {
+    var modal = document.getElementById('two-factor-disable-modal');
+    if (!modal) return;
+
+    var methodInput = document.getElementById('disable-method');
+    var labelEl = document.getElementById('disable-method-label');
+    var emailSend = document.getElementById('disable-email-send');
+
+    function openModal(method, label) {
+        if (methodInput) methodInput.value = method;
+        if (labelEl) labelEl.textContent = label;
+        if (emailSend) emailSend.hidden = method !== 'email';
+        modal.hidden = false;
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+    }
+
+    document.querySelectorAll('[data-2fa-disable-open]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openModal(btn.getAttribute('data-method'), btn.getAttribute('data-label'));
+        });
+    });
+
+    modal.addEventListener('click', function (e) {
+        if (e.target.closest('[data-modal-close]')) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

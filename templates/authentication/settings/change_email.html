@@ -1,0 +1,84 @@
+{% extends "layouts/app.html" %}
+{% block title %}{% if has_current_email %}更换邮箱{% else %}绑定邮箱{% endif %} · ShareMint{% endblock %}
+{% block page_title %}{% if has_current_email %}更换邮箱{% else %}绑定邮箱{% endif %}{% endblock %}
+{% block sidebar %}{% include sidebar_template %}{% endblock %}
+
+{% block content %}
+<div class="detail-toolbar">
+    <a href="{% url 'authentication:settings' %}" class="detail-back">← 返回设置</a>
+</div>
+
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_wallet.html" %} {% if has_current_email %}更换邮箱{% else %}绑定邮箱{% endif %}</h2>
+    </div>
+
+    {% if has_current_email %}
+    <p class="card-desc">当前邮箱：<strong>{{ masked_current_email }}</strong>。更换前需先验证原邮箱，再验证新邮箱。</p>
+
+    {% if step == 'verify_old' %}
+    <div class="settings-step-label">第 1 步 · 验证原邮箱</div>
+    <form method="post" class="form-actions-row" style="margin-bottom: var(--space-md);">
+        {% csrf_token %}
+        <button type="submit" name="action" value="send_old_code" class="btn btn-secondary">发送验证码至原邮箱</button>
+    </form>
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="old-token">原邮箱验证码</label>
+            <input type="text" name="token" id="old-token" inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="输入 6 位验证码">
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="verify_old_code" class="btn btn-primary btn-glow">验证并继续</button>
+            <a href="{% url 'authentication:settings' %}" class="btn btn-ghost">取消</a>
+        </div>
+    </form>
+    {% else %}
+    <div class="settings-step-label">第 2 步 · 填写并验证新邮箱</div>
+    <p class="card-desc">原邮箱已验证，请在 15 分钟内完成更换。</p>
+    {% endif %}
+    {% else %}
+    <p class="card-desc">绑定邮箱后可用于接收验证码、重置密码等通知。</p>
+    {% endif %}
+
+    {% if step == 'set_new' %}
+    <form method="post" class="form-stack" style="margin-bottom: var(--space-md);">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="new_email">新邮箱</label>
+                <input type="email" name="new_email" id="new_email" required
+                       value="{{ pending_new_email }}" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="confirm_email">确认新邮箱</label>
+                <input type="email" name="confirm_email" id="confirm_email" required
+                       value="{{ pending_new_email }}" autocomplete="email">
+            </div>
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="send_new_code" class="btn btn-secondary">发送验证码至新邮箱</button>
+        </div>
+    </form>
+
+    {% if pending_new_email %}
+    <p class="card-desc">验证码已发送至 <strong>{{ masked_pending_new_email }}</strong>，请输入验证码完成更换。</p>
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="new-token">新邮箱验证码</label>
+            <input type="text" name="token" id="new-token" inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="输入 6 位验证码">
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="confirm_new_email" class="btn btn-primary btn-glow">确认更换</button>
+            <a href="{% url 'authentication:settings' %}" class="btn btn-ghost">取消</a>
+        </div>
+    </form>
+    {% endif %}
+    {% endif %}
+</article>
+{% endblock %}

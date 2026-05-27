@@ -1,0 +1,43 @@
+{% extends "layouts/app.html" %}
+{% block title %}资产概览 · 成员{% endblock %}
+{% block page_title %}资产概览{% endblock %}
+{% block sidebar %}{% include "management/member/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<div class="stat-grid stat-grid-3">
+    <article class="stat-card crypto-glow">
+        <div class="stat-icon">{% include "includes/icon_chart.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">资产总市值</span>
+            <strong class="stat-value">{{ total_market_value|floatformat:2 }} USDT</strong>
+        </div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-icon">{% include "includes/icon_coin.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">投资笔数</span>
+            <strong class="stat-value">{{ investment_count }}</strong>
+        </div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-icon">{% include "includes/icon_coin.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">GDT 实时价</span>
+            <strong class="stat-value">{{ gdt_price }} USDT</strong>
+            {% include "includes/gdt_price_disclaimer.html" with compact=True %}
+        </div>
+    </article>
+</div>
+
+{% if referrer_profile %}
+<article class="card detail-section crypto-glow">
+    <h2>{% include "includes/icon_users.html" %} 所属团长</h2>
+    <dl class="info-list">
+        <div><dt>姓名</dt><dd>{{ referrer_profile.name }}</dd></div>
+        <div><dt>手机</dt><dd>{{ referrer_profile.phone|default:"—" }}</dd></div>
+        <div><dt>微信</dt><dd>{{ referrer_profile.wechat|default:"—" }}</dd></div>
+        <div><dt>邮箱</dt><dd>{{ referrer_profile.email|default:"—" }}</dd></div>
+    </dl>
+</article>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "layouts/app.html" %}
+{% block title %}数据概览 · 管理后台{% endblock %}
+{% block page_title %}数据概览{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+    <article class="stat-card crypto-glow">
+        <div class="stat-icon">{% include "includes/icon_coin.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">GDT 当前价格</span>
+            <strong class="stat-value">{{ gdt_price }} <small>USDT</small></strong>
+            {% include "includes/gdt_price_disclaimer.html" with compact=True %}
+        </div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-icon">{% include "includes/icon_chart.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">平台总投资</span>
+            <strong class="stat-value">{{ total_investment|floatformat:2 }} <small>USDT</small></strong>
+        </div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-icon">{% include "includes/icon_wallet.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">资产总市值</span>
+            <strong class="stat-value">{{ total_market_value|floatformat:2 }} <small>USDT</small></strong>
+        </div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-icon">{% include "includes/icon_users.html" %}</div>
+        <div class="stat-body">
+            <span class="stat-label">团长 / 成员</span>
+            <strong class="stat-value">{{ headman_count }} / {{ member_count }}</strong>
+        </div>
+    </article>
+</div>
+
+<div class="dashboard-charts">
+    <article class="card detail-section">
+        <div class="card-header-row">
+            <h2>{% include "includes/icon_chart.html" %} 近 6 个月投资趋势</h2>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="chart-investment-trend" aria-label="投资趋势图表"></canvas>
+        </div>
+    </article>
+
+    <article class="card detail-section">
+        <div class="card-header-row">
+            <h2>{% include "includes/icon_coin.html" %} 团长团队投资 Top 5</h2>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="chart-team-ranking" aria-label="团长团队投资排行"></canvas>
+        </div>
+    </article>
+</div>
+
+<div class="quick-actions card detail-section">
+    <div class="card-header-row">
+        <h2>快捷入口</h2>
+    </div>
+    <div class="quick-actions-grid">
+        <a href="{% url 'management:admin_headman_list' %}" class="quick-action-item">{% include "includes/icon_users.html" %} 团长列表</a>
+        <a href="{% url 'management:admin_create_headman' %}" class="quick-action-item">{% include "includes/icon_wallet.html" %} 团长开户</a>
+        <a href="{% url 'management:admin_settings_price' %}" class="quick-action-item">{% include "includes/icon_coin.html" %} 价格设置</a>
+        <a href="{% url 'management:admin_settings_backup' %}" class="quick-action-item">{% include "includes/icon_backup.html" %} 备份恢复</a>
+    </div>
+</div>
+
+{{ charts|json_script:"dashboard-chart-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script src="/static/js/admin_dashboard.js"></script>
+{% endblock %}

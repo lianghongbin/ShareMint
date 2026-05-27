@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% block title %}价格设置 · 系统设置{% endblock %}
+{% block page_title %}价格设置{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_coin.html" %} 价格设置</h2>
+    </div>
+    <p class="card-desc">单一水源价格控制，修改后将影响全平台资产市值计算。</p>
+    <div class="price-display">
+        <span class="stat-label">当前 GDT 价格</span>
+        <strong class="price-value">{{ current_price }} <small>USDT</small></strong>
+        {% include "includes/gdt_price_disclaimer.html" %}
+    </div>
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="gdt_price">新价格 (USDT)</label>
+            <input type="text" name="gdt_price" id="gdt_price" required value="{{ current_price }}" inputmode="decimal">
+        </div>
+        <button type="submit" class="btn btn-primary btn-glow">确认更新</button>
+    </form>
+</article>
+{% endblock %}

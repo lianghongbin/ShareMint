@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% block title %}邮件二次验证 · ShareMint{% endblock %}
+{% block page_title %}开启邮件验证{% endblock %}
+{% block sidebar %}{% include sidebar_template %}{% endblock %}
+
+{% block content %}
+<div class="detail-toolbar">
+    <a href="{% url 'authentication:settings' %}" class="detail-back">← 返回设置</a>
+</div>
+
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_shield.html" %} 邮件验证</h2>
+    </div>
+    <p class="card-desc">验证码将发送至 <strong>{{ masked_email }}</strong>，每次登录时也会向该邮箱发送验证码。</p>
+
+    <form method="post" class="form-actions-row" style="margin-bottom: var(--space-md);">
+        {% csrf_token %}
+        <button type="submit" name="action" value="send" class="btn btn-secondary">发送验证码</button>
+    </form>
+
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="token">邮箱验证码</label>
+            <input type="text" name="token" id="token" inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="输入 6 位验证码">
+        </div>
+        <div class="form-actions-row">
+            <button type="submit" name="action" value="verify" class="btn btn-primary btn-glow">确认开启</button>
+            <a href="{% url 'authentication:settings' %}" class="btn btn-ghost">取消</a>
+        </div>
+    </form>
+</article>
+{% endblock %}

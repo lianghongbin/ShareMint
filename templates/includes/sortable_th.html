@@ -1,0 +1,6 @@
+<th class="col-sortable{% if sort == field %} is-sorted is-sorted-{{ order }}{% endif %}">
+    <a href="?sort={{ field }}&order={% if sort == field and order == 'asc' %}desc{% else %}asc{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" class="sort-link">
+        <span>{{ label }}</span>
+        <span class="sort-indicator" aria-hidden="true"></span>
+    </a>
+</th>

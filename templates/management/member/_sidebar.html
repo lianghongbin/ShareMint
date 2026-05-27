@@ -1,0 +1,15 @@
+<div class="nav-group">
+    <span class="nav-group-label">资产</span>
+    <a href="{% url 'management:member_dashboard' %}" class="nav-item {% if current_url_name == 'member_dashboard' %}is-active{% endif %}">
+        {% include "includes/icon_chart.html" %} 资产概览
+    </a>
+    <a href="{% url 'management:member_investments' %}" class="nav-item {% if current_url_name == 'member_investments' %}is-active{% endif %}">
+        {% include "includes/icon_coin.html" %} 投资清册
+    </a>
+</div>
+<div class="nav-group">
+    <span class="nav-group-label">账户</span>
+    <a href="{% url 'management:member_profile' %}" class="nav-item {% if current_url_name == 'member_profile' %}is-active{% endif %}">
+        {% include "includes/icon_wallet.html" %} 个人资料
+    </a>
+</div>

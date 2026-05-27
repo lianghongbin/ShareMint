@@ -1,0 +1,12 @@
+TWO_FACTOR_VERIFIED_METHODS_KEY = 'two_factor_verified_methods'
+PENDING_TWO_FACTOR_SECRET_KEY = 'pending_two_factor_secret'
+TWO_FACTOR_VERIFIED_SESSION_KEY = 'two_factor_verified'
+EMAIL_OTP_SESSION_KEY = 'two_factor_email_otp'
+EMAIL_OTP_SENT_AT_KEY = 'two_factor_email_otp_sent_at'
+
+EMAIL_CHANGE_OLD_VERIFIED_AT_KEY = 'email_change_old_verified_at'
+EMAIL_CHANGE_PENDING_NEW_KEY = 'email_change_pending_new'
+EMAIL_CHANGE_OTP_OLD_KEY = 'email_change_otp_old'
+EMAIL_CHANGE_OTP_OLD_SENT_AT_KEY = 'email_change_otp_old_sent_at'
+EMAIL_CHANGE_OTP_NEW_KEY = 'email_change_otp_new'
+EMAIL_CHANGE_OTP_NEW_SENT_AT_KEY = 'email_change_otp_new_sent_at'

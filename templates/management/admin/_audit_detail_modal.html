@@ -1,0 +1,48 @@
+<h3>{% include "includes/icon_shield.html" %} {{ log.summary }}</h3>
+
+<dl class="info-list audit-meta">
+    <div><dt>操作时间</dt><dd>{{ log.created_at|date:"Y-m-d H:i:s" }}</dd></div>
+    <div><dt>操作者</dt><dd>{% if log.username %}{{ log.username }}（{{ log.role_label }}）{% else %}—{% endif %}</dd></div>
+    <div><dt>IP 地址</dt><dd>{{ log.ip_address|default:"—" }}</dd></div>
+</dl>
+
+{% if log.compare_rows %}
+<h4 class="subsection-title">变更内容</h4>
+<div class="table-wrap">
+    <table class="data-table audit-compare-table">
+        <thead>
+            <tr>
+                <th>项目</th>
+                <th>修改前</th>
+                <th>修改后</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in log.compare_rows %}
+            <tr>
+                <td>{{ row.label }}</td>
+                <td>{{ row.before }}</td>
+                <td>{{ row.after }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% elif log.after_data %}
+<h4 class="subsection-title">操作内容</h4>
+<dl class="info-list">
+    {% for key, value in log.after_data.items %}
+    <div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+</dl>
+{% endif %}
+
+{% if log.note_text %}
+<p class="card-desc">{{ log.note_text }}</p>
+{% elif not log.compare_rows and not log.after_data %}
+<p class="card-desc text-muted">此操作无额外变更明细。</p>
+{% endif %}
+
+<div class="modal-actions">
+    <button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button>
+</div>

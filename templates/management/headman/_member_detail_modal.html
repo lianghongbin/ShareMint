@@ -1,0 +1,147 @@
+{% load sharemint_extras %}
+<style>
+.member-detail-modal { font-size: 0.85rem; line-height: 1.35; }
+.member-detail-modal h3 {
+    margin: 0 0 0.45rem; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 0.35rem;
+}
+.member-detail-modal .member-kv-block {
+    border: 1px solid var(--color-border); border-radius: 8px;
+    overflow: hidden; margin: 0 0 0.4rem;
+}
+.member-detail-modal .member-kv-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    padding: 0.35rem 0.85rem; border-bottom: 1px solid var(--color-border);
+}
+.member-detail-modal .member-kv-row:last-child { border-bottom: none; }
+.member-detail-modal .member-kv-row-single { grid-template-columns: 1fr; }
+.member-detail-modal .member-kv-field {
+    display: grid;
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-items: baseline;
+    min-width: 0;
+}
+.member-detail-modal .member-kv-label {
+    color: var(--color-muted); font-weight: 500; white-space: nowrap;
+}
+.member-detail-modal .member-kv-value {
+    word-break: break-word; min-width: 0;
+}
+.member-detail-modal .member-section-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 0.75rem; margin: 0.45rem 0 0.25rem;
+    font-size: 0.82rem; font-weight: 600; color: var(--color-muted);
+}
+.member-detail-modal .subsection-hint {
+    font-weight: 400; font-size: 0.75rem; color: var(--color-muted); white-space: nowrap;
+}
+.member-detail-modal .table-wrap { margin-top: 0.15rem; }
+.member-detail-modal .audit-compare-table th,
+.member-detail-modal .audit-compare-table td { padding: 0.3rem 0.45rem; font-size: 0.82rem; }
+.member-detail-modal .modal-actions { margin-top: 0.65rem; }
+.member-detail-modal .gdt-price-disclaimer { margin: 0 0 0.3rem; }
+.member-detail-modal .card-desc { margin: 0.2rem 0 0.35rem; font-size: 0.78rem; }
+@media (max-width: 520px) {
+    .member-detail-modal .member-kv-row { grid-template-columns: 1fr; gap: 0.35rem; }
+}
+</style>
+
+<div class="member-detail-modal">
+<h3>{% include "includes/icon_users.html" %} {{ profile.name|default:member.username }} 的成员详情</h3>
+
+<div class="member-kv-block">
+    <div class="member-kv-row">
+        <div class="member-kv-field">
+            <span class="member-kv-label">用户名</span>
+            <span class="member-kv-value">{{ member.username }}</span>
+        </div>
+        <div class="member-kv-field">
+            <span class="member-kv-label">姓名</span>
+            <span class="member-kv-value">{{ profile.name|default:"—" }}</span>
+        </div>
+    </div>
+    <div class="member-kv-row">
+        <div class="member-kv-field">
+            <span class="member-kv-label">手机</span>
+            <span class="member-kv-value">{{ profile.phone|default:"—" }}</span>
+        </div>
+        <div class="member-kv-field">
+            <span class="member-kv-label">微信</span>
+            <span class="member-kv-value">{{ profile.wechat|default:"—" }}</span>
+        </div>
+    </div>
+    <div class="member-kv-row member-kv-row-single">
+        <div class="member-kv-field">
+            <span class="member-kv-label">邮箱</span>
+            <span class="member-kv-value">{{ profile.email|default:"—" }}</span>
+        </div>
+    </div>
+    <div class="member-kv-row member-kv-row-single">
+        <div class="member-kv-field">
+            <span class="member-kv-label">注册时间</span>
+            <span class="member-kv-value">{{ member.date_joined|date:"Y-m-d H:i" }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="member-section-head">
+    <span>资产概览</span>
+    <span class="subsection-hint">GDT {{ gdt_price|floatformat:4 }} USDT</span>
+</div>
+{% include "includes/gdt_price_disclaimer.html" with compact=True %}
+<div class="member-kv-block">
+    <div class="member-kv-row">
+        <div class="member-kv-field">
+            <span class="member-kv-label">投资总额</span>
+            <span class="member-kv-value highlight">{{ member.total_investment|default:0|floatformat:2 }} USDT</span>
+        </div>
+        <div class="member-kv-field">
+            <span class="member-kv-label">持币总量</span>
+            <span class="member-kv-value">{{ member.total_tokens|default:0|format_gdt }} GDT</span>
+        </div>
+    </div>
+    <div class="member-kv-row member-kv-row-single">
+        <div class="member-kv-field">
+            <span class="member-kv-label">资产估值</span>
+            <span class="member-kv-value highlight">{{ total_market_value|floatformat:2 }} USDT</span>
+        </div>
+    </div>
+</div>
+
+<div class="member-section-head"><span>投资记录</span></div>
+<div class="table-wrap">
+    <table class="data-table audit-compare-table">
+        <thead>
+            <tr>
+                <th>投资时间</th>
+                <th>金额 (USDT)</th>
+                <th>持有 (GDT)</th>
+                <th>动态市值</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in investments %}
+            <tr>
+                <td>{{ item.investment_date|date:"Y-m-d H:i" }}</td>
+                <td>{{ item.investment_amount }}</td>
+                <td>{{ item.holding_quantity|format_gdt }}</td>
+                <td class="highlight">{{ item.current_market_value|floatformat:2 }} USDT</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-muted empty-cell">暂无投资记录</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if investments|length >= 50 %}
+<p class="card-desc text-muted">仅展示最近 50 条记录</p>
+{% endif %}
+
+<div class="modal-actions">
+    {% if not is_locked %}
+    <a href="{% url 'management:headman_add_member_investment' member.pk %}" class="btn btn-primary btn-sm">追加投资</a>
+    {% endif %}
+    <button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button>
+</div>
+</div>

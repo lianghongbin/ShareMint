@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% block title %}团长开户 · 管理后台{% endblock %}
+{% block page_title %}团长开户{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_wallet.html" %} 团长开户</h2>
+    </div>
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="username">用户名 *</label>
+                <input type="text" name="username" id="username" required placeholder="登录用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">初始密码 *</label>
+                <input type="password" name="password" id="password" required minlength="8" placeholder="至少 8 位">
+            </div>
+            <div class="form-group">
+                <label for="name">姓名 *</label>
+                <input type="text" name="name" id="name" required placeholder="团长姓名">
+            </div>
+            <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="text" name="phone" id="phone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+                <label for="wechat">微信号</label>
+                <input type="text" name="wechat" id="wechat" placeholder="微信号">
+            </div>
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" name="email" id="email" placeholder="邮箱">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-glow">确认开户</button>
+            <a href="{% url 'management:admin_headman_list' %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</article>
+{% endblock %}

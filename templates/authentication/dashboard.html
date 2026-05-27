@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load sharemint_extras %}
+
+{% block title %}工作台 · ShareMint{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1>工作台</h1>
+        <p class="subtitle">当前角色：{{ user_obj.get_role_display }}</p>
+    </div>
+</section>
+
+<div class="grid-responsive">
+    <article class="card">
+        <h2>账户信息</h2>
+        <dl class="info-list">
+            <div><dt>用户名</dt><dd>{{ user_obj.username }}</dd></div>
+            <div><dt>角色</dt><dd>{{ user_obj.get_role_display }}</dd></div>
+            <div><dt>首次登录</dt><dd>{% if user_obj.is_first_login %}是{% else %}否{% endif %}</dd></div>
+        </dl>
+    </article>
+
+    <article class="card">
+        <h2>个人档案</h2>
+        {% if profile %}
+        <dl class="info-list">
+            <div><dt>姓名</dt><dd>{{ profile.name }}</dd></div>
+            <div><dt>手机</dt><dd>{{ profile.phone|default:"—" }}</dd></div>
+            <div><dt>微信</dt><dd>{{ profile.wechat|default:"—" }}</dd></div>
+            <div><dt>邮箱</dt><dd>{{ profile.email|default:"—" }}</dd></div>
+        </dl>
+        {% else %}
+        <p class="text-muted">暂无档案信息，请联系管理员或团长录入。</p>
+        {% endif %}
+    </article>
+
+    {% if user_obj.role == 'member' and referrer_profile %}
+    <article class="card">
+        <h2>所属团长</h2>
+        <dl class="info-list">
+            <div><dt>姓名</dt><dd>{{ referrer_profile.name }}</dd></div>
+            <div><dt>手机</dt><dd>{{ referrer_profile.phone|default:"—" }}</dd></div>
+            <div><dt>微信</dt><dd>{{ referrer_profile.wechat|default:"—" }}</dd></div>
+            <div><dt>邮箱</dt><dd>{{ referrer_profile.email|default:"—" }}</dd></div>
+        </dl>
+    </article>
+    {% endif %}
+</div>
+
+{% if investments %}
+<section class="section-block">
+    <h2>投资清册</h2>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>投资时间</th>
+                    <th>投资金额 (USDT)</th>
+                    <th>持有数量</th>
+                    <th>币种</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in investments %}
+                <tr>
+                    <td data-label="投资时间">{{ item.investment_date|date:"Y-m-d H:i" }}</td>
+                    <td data-label="投资金额">{{ item.investment_amount }}</td>
+                    <td data-label="持有数量">{{ item.holding_quantity|format_gdt }}</td>
+                    <td data-label="币种">{{ item.holding_currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

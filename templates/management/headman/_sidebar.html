@@ -1,0 +1,24 @@
+<div class="nav-group">
+    <span class="nav-group-label">工作台</span>
+    <a href="{% url 'management:headman_dashboard' %}" class="nav-item {% if current_url_name == 'headman_dashboard' %}is-active{% endif %}">
+        {% include "includes/icon_chart.html" %} 数据概览
+    </a>
+</div>
+<div class="nav-group">
+    <span class="nav-group-label">团队</span>
+    <a href="{% url 'management:headman_member_list' %}" class="nav-item {% if current_url_name == 'headman_member_list' or current_url_name == 'headman_member_detail' %}is-active{% endif %}">
+        {% include "includes/icon_users.html" %} 成员列表
+    </a>
+    <a href="{% url 'management:headman_add_member' %}" class="nav-item {% if current_url_name == 'headman_add_member' %}is-active{% endif %}">
+        {% include "includes/icon_wallet.html" %} 录入成员
+    </a>
+    <a href="{% url 'management:headman_add_investment' %}" class="nav-item {% if current_url_name == 'headman_add_investment' or current_url_name == 'headman_add_member_investment' %}is-active{% endif %}">
+        {% include "includes/icon_coin.html" %} 追加投资
+    </a>
+</div>
+<div class="nav-group">
+    <span class="nav-group-label">账户</span>
+    <a href="{% url 'management:headman_profile' %}" class="nav-item {% if current_url_name == 'headman_profile' %}is-active{% endif %}">
+        {% include "includes/icon_settings.html" %} 个人资料
+    </a>
+</div>

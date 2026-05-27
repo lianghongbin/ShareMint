@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}
+{% block title %}追加投资 · 团长{% endblock %}
+{% block page_title %}追加投资{% endblock %}
+{% block sidebar %}{% include "management/headman/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section detail-section--compact">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_coin.html" %} 追加投资</h2>
+    </div>
+    <p class="card-desc card-desc--compact">同一成员可多次追加，每次新增一条记录。</p>
+
+    {% if members %}
+    <form method="post" class="form-stack form-stack--compact investment-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="member_id">成员 *</label>
+            <select name="member_id" id="member_id" required>
+                <option value="">请选择成员</option>
+                {% for m in members %}
+                <option value="{{ m.pk }}" {% if selected_member and selected_member.pk == m.pk %}selected{% endif %}>
+                    {{ m.username }}{% if m.profile.name %} · {{ m.profile.name }}{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <h3 class="subsection-title subsection-title--compact">本次投资</h3>
+        <div class="form-grid form-grid--compact">
+            <div class="form-group">
+                <label for="investment_amount">投资金额 (USDT) *</label>
+                <input type="text" name="investment_amount" id="investment_amount" required placeholder="例如 2000" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label for="holding_quantity">持有数量 (GDT) *</label>
+                <input type="text" name="holding_quantity" id="holding_quantity" required placeholder="整数，例如 2000" inputmode="numeric">
+            </div>
+            {% include "includes/gdt_quantity_calculator.html" %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-glow">追加投资</button>
+            <a href="{% url 'management:headman_member_list' %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+    {% else %}
+    <p class="card-desc text-muted">暂无成员，请先录入成员后再追加投资。</p>
+    <div class="form-actions">
+        <a href="{% url 'management:headman_add_member' %}" class="btn btn-primary btn-sm">录入成员</a>
+        <a href="{% url 'management:headman_member_list' %}" class="btn btn-secondary btn-sm">返回列表</a>
+    </div>
+    {% endif %}
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/gdt_quantity_calculator.js"></script>
+{% endblock %}

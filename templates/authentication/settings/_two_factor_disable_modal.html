@@ -1,0 +1,39 @@
+<div id="two-factor-disable-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog crypto-glow">
+        <button type="button" class="modal-close" data-modal-close aria-label="关闭">&times;</button>
+        <div class="audit-detail-body">
+            <h3>{% include "includes/icon_shield.html" %} 关闭二次验证</h3>
+            <p class="card-desc">关闭 <strong id="disable-method-label">验证器 App</strong> 需验证当前密码与对应验证码。</p>
+
+            <div id="disable-email-send" hidden>
+                <form method="post" action="{% url 'authentication:settings_two_factor_send_code' %}" class="form-actions-row" style="margin-bottom: var(--space-md);">
+                    {% csrf_token %}
+                    <input type="hidden" name="purpose" value="关闭二次验证">
+                    <button type="submit" class="btn btn-outline btn-sm">发送邮件验证码</button>
+                </form>
+            </div>
+
+            <form method="post" action="{% url 'authentication:settings_two_factor_disable' %}" class="form-stack">
+                {% csrf_token %}
+                <input type="hidden" name="method" id="disable-method" value="totp">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="disable-password">当前密码</label>
+                        <input type="password" name="password" id="disable-password" required autocomplete="current-password"
+                               placeholder="输入当前密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="disable-token">验证码</label>
+                        <input type="text" name="token" id="disable-token" required inputmode="numeric" pattern="[0-9]{6}"
+                               maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-danger btn-sm">确认关闭</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-modal-close>取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,86 @@
+{% extends "layouts/app.html" %}
+{% block title %}SMTP 邮件 · 系统设置{% endblock %}
+{% block page_title %}SMTP 邮件{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_coin.html" %} SMTP 邮件</h2>
+    </div>
+    <p class="card-desc">生产环境请选择 <strong>SMTP</strong> 并保存后，测试邮件才会真正发出；开发模式只会打印到服务器控制台。</p>
+    {% if not smtp_active and config.host %}
+    <div class="alert alert-warning">已填写 SMTP 参数，但发送方式仍是「开发模式」，邮件不会发到邮箱。请切换为 SMTP 并点击保存。</div>
+    {% endif %}
+
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save">
+
+        <div class="form-group">
+            <label for="mode">发送方式</label>
+            <select name="mode" id="mode" required>
+                <option value="{{ email_mode_console }}" {% if config.mode == email_mode_console %}selected{% endif %}>
+                    开发模式（控制台）
+                </option>
+                <option value="{{ email_mode_smtp }}" {% if config.mode == email_mode_smtp %}selected{% endif %}>
+                    SMTP
+                </option>
+            </select>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="host">SMTP 服务器</label>
+                <input type="text" name="host" id="host" value="{{ config.host }}"
+                       placeholder="例如 smtp.qq.com">
+            </div>
+            <div class="form-group">
+                <label for="port">端口</label>
+                <input type="text" name="port" id="port" value="{{ config.port }}" inputmode="numeric" placeholder="587">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="username">SMTP 用户名</label>
+                <input type="text" name="username" id="username" value="{{ config.username }}"
+                       autocomplete="username" placeholder="通常为完整邮箱地址">
+            </div>
+            <div class="form-group">
+                <label for="password">SMTP 密码 / 授权码</label>
+                <input type="password" name="password" id="password" autocomplete="new-password"
+                       placeholder="{% if config.has_password %}已设置，留空则不修改{% else %}邮箱 SMTP 授权码{% endif %}">
+            </div>
+        </div>
+
+        <label class="checkbox-label">
+            <input type="checkbox" name="use_tls" {% if config.use_tls %}checked{% endif %}>
+            <span>启用 TLS</span>
+        </label>
+
+        <div class="form-group">
+            <label for="from_email">发件人</label>
+            <input type="text" name="from_email" id="from_email" value="{{ config.from_email }}"
+                   placeholder="ShareMint &lt;noreply@example.com&gt;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-glow">保存配置</button>
+    </form>
+</article>
+
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>发送测试邮件</h2>
+    </div>
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="test">
+        <div class="form-group">
+            <label for="test_to">收件邮箱</label>
+            <input type="email" name="test_to" id="test_to" required placeholder="your@email.com">
+        </div>
+        <button type="submit" class="btn btn-outline">发送测试</button>
+    </form>
+</article>
+{% endblock %}

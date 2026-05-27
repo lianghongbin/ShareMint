@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}
+{% block title %}录入成员 · 团长{% endblock %}
+{% block page_title %}录入新成员{% endblock %}
+{% block sidebar %}{% include "management/headman/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_users.html" %} 录入新成员</h2>
+    </div>
+    <form method="post" class="form-stack form-stack--compact">
+        {% csrf_token %}
+        <h3 class="subsection-title">账户信息</h3>
+        <div class="form-grid">
+            <div class="form-group"><label>用户名 *</label><input type="text" name="username" required></div>
+            <div class="form-group"><label>初始密码 *</label><input type="password" name="password" required minlength="8"></div>
+            <div class="form-group"><label>姓名 *</label><input type="text" name="name" required></div>
+            <div class="form-group"><label>手机号</label><input type="text" name="phone"></div>
+            <div class="form-group"><label>微信号</label><input type="text" name="wechat"></div>
+            <div class="form-group"><label>邮箱</label><input type="email" name="email"></div>
+        </div>
+        <h3 class="subsection-title subsection-title--compact">首笔投资（可选）</h3>
+        <p class="card-desc card-desc--compact text-muted">可不填，开户后再追加。</p>
+        <div class="form-grid form-grid--compact">
+            <div class="form-group"><label>投资金额 (USDT)</label><input type="text" name="investment_amount" id="investment_amount" placeholder="0" inputmode="decimal"></div>
+            <div class="form-group"><label>持有数量 (GDT)</label><input type="text" name="holding_quantity" id="holding_quantity" placeholder="0" inputmode="numeric"></div>
+            {% include "includes/gdt_quantity_calculator.html" %}
+        </div>
+        <div class="form-actions form-actions--start">
+            <button type="submit" class="btn btn-primary btn-glow">确认录入</button>
+            <a href="{% url 'management:headman_member_list' %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/gdt_quantity_calculator.js"></script>
+{% endblock %}

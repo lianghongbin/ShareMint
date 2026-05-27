@@ -1,0 +1,75 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}登录 · ShareMint{% endblock %}
+
+{% block content %}
+<section class="auth-card crypto-glow">
+    <div class="auth-card__header">
+        <div class="auth-logo">{% include "includes/icon_logo.html" %}</div>
+        <h1>连接 Web3 分佣网络</h1>
+        <p>ShareMint · GDT 团长管理平台</p>
+    </div>
+
+    <form method="post" class="form-stack" id="login-form" action="{% url 'authentication:login' %}">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="flash-stack flash-stack--inline">
+            {% include "includes/flash_alert.html" with level="error" text=form.non_field_errors.0 %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_username">{% include "includes/icon_coin.html" %} 用户名</label>
+            <input type="text" name="username" id="id_username" required autofocus
+                   value="{{ form.username.value|default:'' }}" autocomplete="username"
+                   placeholder="请输入用户名" enterkeyhint="next"
+                   {% if form.username.errors %}class="input-error" aria-invalid="true"{% endif %}>
+            {% if form.username.errors %}
+            <span class="field-error">{{ form.username.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_password">{% include "includes/icon_lock.html" %} 密码</label>
+            <input type="password" name="password" id="id_password" required
+                   autocomplete="current-password" placeholder="请输入密码" enterkeyhint="go"
+                   {% if form.password.errors %}class="input-error" aria-invalid="true"{% endif %}>
+            {% if form.password.errors %}
+            <span class="field-error">{{ form.password.errors.0 }}</span>
+            {% endif %}
+        </div>
+
+        <input type="submit" class="btn btn-primary btn-block btn-glow" id="login-submit" value="登录系统">
+    </form>
+
+    <p class="login-hint text-muted" style="text-align: center;">
+        <a href="{% url 'authentication:forgot_password' %}">忘记密码？</a>
+    </p>
+
+    <p class="login-hint text-muted">本系统无公开注册。超级管理员由部署脚本初始化；团长由 Admin 开户，成员由团长录入。</p>
+
+    <div class="oauth-links">
+        <p class="text-muted">第三方登录（预留接口）</p>
+        <div class="oauth-btns">
+            <a href="{% url 'authentication:oauth_provider' 'telegram' %}" class="btn btn-outline btn-sm">Telegram</a>
+            <a href="{% url 'authentication:oauth_provider' 'oauth3' %}" class="btn btn-outline btn-sm">OAuth3</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('login-form')?.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.reportValidity()) {
+        return;
+    }
+    var btn = document.getElementById('login-submit');
+    if (btn) {
+        btn.disabled = true;
+        btn.value = '登录中…';
+    }
+});
+</script>
+{% endblock %}

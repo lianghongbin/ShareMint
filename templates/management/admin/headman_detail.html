@@ -1,0 +1,238 @@
+{% extends "layouts/app.html" %}
+{% load sharemint_extras %}
+{% block title %}{{ headman.username }} · 团长详情{% endblock %}
+{% block page_title %}{{ profile.name|default:headman.username }}{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<div class="detail-toolbar">
+    <a href="{% url 'management:admin_headman_list' %}" class="detail-back">← 返回列表</a>
+    <div class="detail-toolbar-right">
+        {% if headman.is_locked %}<span class="badge badge-danger">已锁定</span>{% endif %}
+        {% if headman.is_first_login %}<span class="badge badge-warning">待改密</span>{% endif %}
+        <form method="post" action="{% url 'management:admin_reset_headman_password' headman.pk %}" class="inline-form"
+              onsubmit="return confirm('确认向该团长注册邮箱发送密码重置链接？');">
+            {% csrf_token %}
+            <input type="hidden" name="redirect_to" value="{{ request.path }}">
+            <button type="submit" class="btn btn-sm btn-outline">密码初始化</button>
+        </form>
+        <form method="post" action="{% url 'management:admin_toggle_lock' headman.pk %}" class="inline-form">
+            {% csrf_token %}
+            <input type="hidden" name="redirect_to" value="{{ request.path }}">
+            <button type="submit" class="btn btn-sm {% if headman.is_locked %}btn-primary{% else %}btn-outline{% endif %}">
+                {% if headman.is_locked %}解锁{% else %}锁定{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
+{# ① 顶部：团长资料（查看 ↔ 原地编辑） #}
+<article class="card detail-section">
+    <form id="profile-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_profile">
+        <input type="hidden" name="confirmed" id="confirmed-field" value="0">
+
+        <div class="card-header-row">
+            <h2>{% include "includes/icon_wallet.html" %} 团长资料</h2>
+            <div class="profile-actions">
+                <a href="#" class="text-link" id="btn-edit">编辑</a>
+                <span class="profile-actions-edit" id="edit-actions" hidden>
+                    <a href="#" class="text-link text-link-accent" id="btn-save">保存</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" class="text-link" id="btn-cancel">取消</a>
+                </span>
+            </div>
+        </div>
+
+        <div class="profile-grid profile-block" id="profile-block">
+            <div class="profile-cell">
+                <span class="field-label">用户名</span>
+                <span class="field-view">{{ headman.username }}</span>
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">姓名</span>
+                <span class="field-view">{{ profile.name|default:"—" }}</span>
+                <input class="field-edit" type="text" name="name" value="{{ profile.name }}" required>
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">手机号</span>
+                <span class="field-view">{{ profile.phone|default:"—" }}</span>
+                <input class="field-edit" type="text" name="phone" value="{{ profile.phone }}">
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">微信号</span>
+                <span class="field-view">{{ profile.wechat|default:"—" }}</span>
+                <input class="field-edit" type="text" name="wechat" value="{{ profile.wechat }}">
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">邮箱</span>
+                <span class="field-view">{{ profile.email|default:"—" }}</span>
+                <input class="field-edit" type="email" name="email" value="{{ profile.email }}">
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">开户时间</span>
+                <span class="field-view">{{ headman.date_joined|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="profile-cell">
+                <span class="field-label">最后登录</span>
+                <span class="field-view">{{ headman.last_login|date:"Y-m-d H:i"|default:"—" }}</span>
+            </div>
+        </div>
+    </form>
+</article>
+
+{# ② 中间：左团队数据 · 右提成 #}
+<div class="detail-mid-split">
+    <article class="card detail-section">
+        <h2>{% include "includes/icon_users.html" %} 团队整体数据</h2>
+        <dl class="metric-list">
+            <div><dt>线下成员</dt><dd>{{ stats.member_count }} 人</dd></div>
+            <div><dt>团队总投资</dt><dd>{{ stats.total_investment }} USDT</dd></div>
+            <div><dt>团队总代币</dt><dd>{{ stats.total_tokens|format_gdt }} GDT</dd></div>
+            <div><dt>团队资产总值</dt><dd class="highlight">{{ stats.total_market_value|floatformat:2 }} USDT</dd></div>
+            <div><dt>GDT 现价</dt><dd>{{ stats.gdt_price }} USDT</dd></div>
+        </dl>
+        {% include "includes/gdt_price_disclaimer.html" %}
+    </article>
+
+    <article class="card detail-section commission-card">
+        <h2>{% include "includes/icon_chart.html" %} 提成</h2>
+        <div class="commission-total-box">
+            <span class="field-label">合计提成</span>
+            <strong>{{ stats.total_commission|floatformat:2 }} USDT</strong>
+        </div>
+        <dl class="metric-list">
+            <div><dt>当前梯度</dt><dd>{{ stats.tier_rate_percent|floatformat:0 }}%</dd></div>
+            <div><dt>阶梯提成</dt><dd>{{ stats.tier_commission|floatformat:2 }} USDT</dd></div>
+            <div><dt>大团长奖励</dt><dd>{{ stats.base_bonus|floatformat:2 }} {{ stats.base_bonus_currency }}</dd></div>
+        </dl>
+    </article>
+</div>
+
+{# ③ 底部：线下成员 #}
+<section class="detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_users.html" %} 线下成员</h2>
+        <span class="text-muted">共 {{ stats.member_count }} 人</span>
+    </div>
+    <div class="card table-card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>姓名</th>
+                        <th>手机</th>
+                        <th>投资 (USDT)</th>
+                        <th>持币 (GDT)</th>
+                        <th>注册时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in members %}
+                    <tr>
+                        <td data-label="用户名">{{ m.username }}</td>
+                        <td data-label="姓名">{{ m.profile.name|default:"—" }}</td>
+                        <td data-label="手机">{{ m.profile.phone|default:"—" }}</td>
+                        <td data-label="投资">{{ m.total_investment|default:"0" }}</td>
+                        <td data-label="持币">{{ m.total_tokens|default:0|format_gdt }}</td>
+                        <td data-label="注册">{{ m.date_joined|date:"Y-m-d" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted empty-cell">暂无线下成员</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "includes/pagination.html" with page_obj=page_obj %}
+    </div>
+</section>
+
+<div class="modal" id="confirm-modal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog crypto-glow">
+        <h3>{% include "includes/icon_shield.html" %} 确认保存</h3>
+        <p>确认修改团长 <strong>{{ headman.username }}</strong> 的资料？</p>
+        <ul class="modal-summary" id="confirm-summary"></ul>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-modal-close>取消</button>
+            <button type="button" class="btn btn-primary btn-glow btn-sm" id="btn-confirm-save">确认</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const block = document.getElementById('profile-block');
+    const form = document.getElementById('profile-form');
+    const btnEdit = document.getElementById('btn-edit');
+    const btnSave = document.getElementById('btn-save');
+    const btnCancel = document.getElementById('btn-cancel');
+    const editActions = document.getElementById('edit-actions');
+    const modal = document.getElementById('confirm-modal');
+    const confirmedField = document.getElementById('confirmed-field');
+    const summary = document.getElementById('confirm-summary');
+    const btnConfirm = document.getElementById('btn-confirm-save');
+
+    const inputs = form.querySelectorAll('.field-edit');
+    let snapshot = {};
+
+    function snapshotValues() {
+        snapshot = {};
+        inputs.forEach(function (inp) { snapshot[inp.name] = inp.value; });
+    }
+
+    function restoreValues() {
+        inputs.forEach(function (inp) { inp.value = snapshot[inp.name] || ''; });
+    }
+
+    function enterEdit(e) {
+        e.preventDefault();
+        snapshotValues();
+        block.classList.add('is-editing');
+        btnEdit.hidden = true;
+        editActions.hidden = false;
+    }
+
+    function exitEdit(e) {
+        if (e) e.preventDefault();
+        restoreValues();
+        block.classList.remove('is-editing');
+        btnEdit.hidden = false;
+        editActions.hidden = true;
+        confirmedField.value = '0';
+        modal.hidden = true;
+    }
+
+    btnEdit.addEventListener('click', enterEdit);
+    btnCancel.addEventListener('click', exitEdit);
+
+    function openModal(e) {
+        e.preventDefault();
+        summary.innerHTML = [
+            ['姓名', form.name.value],
+            ['手机号', form.phone.value || '—'],
+            ['微信号', form.wechat.value || '—'],
+            ['邮箱', form.email.value || '—'],
+        ].map(function (f) {
+            return '<li><span>' + f[0] + '</span><span>' + f[1] + '</span></li>';
+        }).join('');
+        modal.hidden = false;
+    }
+
+    btnSave.addEventListener('click', openModal);
+
+    btnConfirm.addEventListener('click', function () {
+        confirmedField.value = '1';
+        form.submit();
+    });
+
+    modal.querySelectorAll('[data-modal-close]').forEach(function (el) {
+        el.addEventListener('click', function () { modal.hidden = true; });
+    });
+})();
+</script>
+{% endblock %}

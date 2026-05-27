@@ -1,0 +1,40 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}二次验证 · ShareMint{% endblock %}
+
+{% block content %}
+<section class="auth-card crypto-glow">
+    <div class="auth-card__header">
+        <div class="auth-logo">{% include "includes/icon_shield.html" %}</div>
+        <h1>登录二次验证</h1>
+        {% if is_email_method %}
+        <p>请输入发送至 <strong>{{ masked_email }}</strong> 的 6 位验证码。</p>
+        {% else %}
+        <p>请输入验证器 App 中的 6 位动态码。</p>
+        {% endif %}
+        {% if remaining_count > 1 %}
+        <p class="text-muted">当前步骤：{{ current_method_label }}（共 {{ remaining_count }} 步）</p>
+        {% endif %}
+    </div>
+
+    <form method="post" class="form-stack" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="token">验证码</label>
+            <input type="text" name="token" id="token" required autofocus inputmode="numeric"
+                   pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                   placeholder="6 位验证码" enterkeyhint="go">
+        </div>
+        <button type="submit" name="action" value="verify" class="btn btn-primary btn-block btn-glow">验证并继续</button>
+    </form>
+
+    {% if is_email_method %}
+    <form method="post" class="form-stack" style="margin-top: var(--space-sm);">
+        {% csrf_token %}
+        <button type="submit" name="action" value="resend" class="btn btn-secondary btn-block">重新发送验证码</button>
+    </form>
+    {% endif %}
+
+    <a href="{% url 'authentication:logout' %}" class="btn btn-ghost btn-block" style="margin-top: var(--space-sm);">退出登录</a>
+</section>
+{% endblock %}

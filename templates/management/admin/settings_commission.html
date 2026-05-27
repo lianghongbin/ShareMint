@@ -1,0 +1,122 @@
+{% extends "layouts/app.html" %}
+{% block title %}提成设定 · 系统设置{% endblock %}
+{% block page_title %}提成设定{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_chart.html" %} 提成设定</h2>
+    </div>
+    <p class="card-desc">
+        配置写入 <code>SystemConfig</code>，与现有阶梯提成引擎完全兼容。
+        团队总业绩按 USDT 计，落在区间内即适用对应比例；另加大团长基础奖励。
+    </p>
+
+    <form method="post" class="form-stack" id="commission-form">
+        {% csrf_token %}
+
+        <h3 class="subsection-title">{% include "includes/icon_chart.html" %} 阶梯提成梯度</h3>
+        <div class="table-wrap tier-editor-wrap">
+            <table class="data-table tier-editor" id="tier-table">
+                <thead>
+                    <tr>
+                        <th>业绩下限 (USDT)</th>
+                        <th>业绩上限 (USDT)</th>
+                        <th>提成比例 (%)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tier-rows">
+                    {% for tier in tiers %}
+                    <tr class="tier-row">
+                        <td><input type="text" name="tier_min" value="{{ tier.min }}" required inputmode="decimal"></td>
+                        <td><input type="text" name="tier_max" value="{{ tier.max }}" required inputmode="decimal"></td>
+                        <td><input type="text" name="tier_rate" value="{{ tier.rate_percent }}" required inputmode="decimal"></td>
+                        <td class="tier-actions"><button type="button" class="text-link tier-remove">删除</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="tier-add">+ 添加梯度</button>
+
+        <div class="detail-divider"></div>
+
+        <h3 class="subsection-title">{% include "includes/icon_coin.html" %} 大团长基础奖励</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="base_bonus_rate">奖励比例 (%)</label>
+                <input type="text" name="base_bonus_rate" id="base_bonus_rate"
+                       value="{{ base_bonus_rate_percent }}" required inputmode="decimal">
+                <span class="field-hint">按团队总投资额额外计算，默认 5%</span>
+            </div>
+            <div class="form-group">
+                <label for="base_bonus_currency">发放币种</label>
+                <select name="base_bonus_currency" id="base_bonus_currency">
+                    <option value="USDT" {% if base_bonus_currency == 'USDT' %}selected{% endif %}>USDT</option>
+                    <option value="GDT" {% if base_bonus_currency == 'GDT' %}selected{% endif %}>GDT</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-glow">保存提成设定</button>
+        </div>
+    </form>
+</article>
+
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>当前规则预览</h2>
+    </div>
+    <ul class="tier-preview">
+        {% for tier in tiers %}
+        <li>
+            {{ tier.min|floatformat:0 }} – {{ tier.max|floatformat:0 }} USDT
+            → <strong>{{ tier.rate_percent }}%</strong>
+        </li>
+        {% endfor %}
+    </ul>
+    <p class="text-muted">大团长额外奖励：<strong>{{ base_bonus_rate_percent }}%</strong>（{{ base_bonus_currency }}）</p>
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const tbody = document.getElementById('tier-rows');
+    const btnAdd = document.getElementById('tier-add');
+
+    function bindRemove(row) {
+        const btn = row.querySelector('.tier-remove');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            if (tbody.querySelectorAll('.tier-row').length <= 1) {
+                alert('至少保留一个梯度。');
+                return;
+            }
+            row.remove();
+        });
+    }
+
+    function addRow(minVal, maxVal, rateVal) {
+        const tr = document.createElement('tr');
+        tr.className = 'tier-row';
+        tr.innerHTML =
+            '<td><input type="text" name="tier_min" value="' + (minVal || '') + '" required inputmode="decimal"></td>' +
+            '<td><input type="text" name="tier_max" value="' + (maxVal || '') + '" required inputmode="decimal"></td>' +
+            '<td><input type="text" name="tier_rate" value="' + (rateVal || '') + '" required inputmode="decimal"></td>' +
+            '<td class="tier-actions"><button type="button" class="text-link tier-remove">删除</button></td>';
+        tbody.appendChild(tr);
+        bindRemove(tr);
+        if (window.ShareMint && window.ShareMint.initNumericInputs) {
+            window.ShareMint.initNumericInputs(tr);
+        }
+    }
+
+    tbody.querySelectorAll('.tier-row').forEach(bindRemove);
+    btnAdd.addEventListener('click', function () { addRow('', '', ''); });
+})();
+</script>
+{% endblock %}

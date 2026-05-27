@@ -1,0 +1,129 @@
+{% extends "layouts/app.html" %}
+{% block title %}成员列表 · 团长{% endblock %}
+{% block page_title %}成员列表{% endblock %}
+{% block sidebar %}{% include "management/headman/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+{% if is_locked %}
+<div class="alert alert-error">{% include "includes/icon_lock.html" %} 账号已锁定，仅可查看数据。</div>
+{% endif %}
+
+<div class="page-toolbar">
+    <form method="get" class="search-form">
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        {% if order %}<input type="hidden" name="order" value="{{ order }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="搜索用户名或姓名…">
+        <button type="submit" class="btn btn-outline btn-sm">搜索</button>
+    </form>
+    {% if not is_locked %}
+    <div class="page-toolbar-actions">
+        <a href="{% url 'management:headman_add_investment' %}" class="btn btn-outline btn-sm">追加投资</a>
+        <a href="{% url 'management:headman_add_member' %}" class="btn btn-primary btn-sm">录入成员</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card table-card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% include "includes/sortable_th.html" with label="用户名" field="username" %}
+                    {% include "includes/sortable_th.html" with label="姓名" field="name" %}
+                    {% include "includes/sortable_th.html" with label="手机" field="phone" %}
+                    <th>微信</th>
+                    {% include "includes/sortable_th.html" with label="投资总额" field="total_investment" %}
+                    {% include "includes/sortable_th.html" with label="注册时间" field="date_joined" %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr class="table-row-clickable"
+                    role="button"
+                    tabindex="0"
+                    data-member-url="{% url 'management:headman_member_detail' m.pk %}"
+                    aria-label="查看 {{ m.username }} 详情">
+                    <td data-label="用户名">{{ m.username }}</td>
+                    <td data-label="姓名">{{ m.profile.name|default:"—" }}</td>
+                    <td data-label="手机">{{ m.profile.phone|default:"—" }}</td>
+                    <td data-label="微信">{{ m.profile.wechat|default:"—" }}</td>
+                    <td data-label="投资总额" class="highlight">{{ m.total_investment|default:0|floatformat:2 }} USDT</td>
+                    <td data-label="注册时间">{{ m.date_joined|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-muted empty-cell">暂无成员，请先录入</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "includes/pagination.html" with page_obj=page_obj query=query %}
+</div>
+
+<div id="member-detail-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-dialog-wide crypto-glow">
+        <button type="button" class="modal-close" data-modal-close aria-label="关闭">&times;</button>
+        <div id="member-detail-content" class="audit-detail-body">
+            <p class="text-muted">加载中…</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var modal = document.getElementById('member-detail-modal');
+    var content = document.getElementById('member-detail-content');
+    if (!modal || !content) return;
+
+    function closeModal() {
+        modal.hidden = true;
+        content.innerHTML = '<p class="text-muted">加载中…</p>';
+    }
+
+    function loadMember(url) {
+        content.innerHTML = '<p class="text-muted">加载中…</p>';
+        modal.hidden = false;
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) {
+                if (!r.ok) throw new Error('load failed');
+                return r.text();
+            })
+            .then(function (html) {
+                content.innerHTML = html;
+            })
+            .catch(function () {
+                content.innerHTML = '<p class="text-muted">加载失败，请稍后重试。</p><div class="modal-actions"><button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button></div>';
+            });
+    }
+
+    document.querySelectorAll('.table-row-clickable[data-member-url]').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form')) return;
+            loadMember(row.getAttribute('data-member-url'));
+        });
+        row.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                loadMember(row.getAttribute('data-member-url'));
+            }
+        });
+    });
+
+    document.querySelectorAll('.sort-link').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+
+    modal.addEventListener('click', function (e) {
+        if (e.target.closest('[data-modal-close]')) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+})();
+</script>
+{% endblock %}

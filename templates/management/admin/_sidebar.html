@@ -1,0 +1,33 @@
+<div class="nav-group">
+    <span class="nav-group-label">工作台</span>
+    <a href="{% url 'management:admin_dashboard' %}" class="nav-item {% if current_url_name == 'admin_dashboard' %}is-active{% endif %}">
+        {% include "includes/icon_chart.html" %} 数据概览
+    </a>
+</div>
+<div class="nav-group">
+    <span class="nav-group-label">团长管理</span>
+    <a href="{% url 'management:admin_headman_list' %}" class="nav-item {% if current_url_name == 'admin_headman_list' or current_url_name == 'admin_toggle_lock' or current_url_name == 'admin_headman_detail' %}is-active{% endif %}">
+        {% include "includes/icon_users.html" %} 团长列表
+    </a>
+    <a href="{% url 'management:admin_create_headman' %}" class="nav-item {% if current_url_name == 'admin_create_headman' %}is-active{% endif %}">
+        {% include "includes/icon_wallet.html" %} 团长开户
+    </a>
+</div>
+<div class="nav-group">
+    <span class="nav-group-label">系统设置</span>
+    <a href="{% url 'management:admin_settings_price' %}" class="nav-item {% if current_url_name == 'admin_settings_price' %}is-active{% endif %}">
+        {% include "includes/icon_coin.html" %} 价格设置
+    </a>
+    <a href="{% url 'management:admin_settings_commission' %}" class="nav-item {% if current_url_name == 'admin_settings_commission' %}is-active{% endif %}">
+        {% include "includes/icon_chart.html" %} 提成设定
+    </a>
+    <a href="{% url 'management:admin_settings_backup' %}" class="nav-item {% if current_url_name == 'admin_settings_backup' or current_url_name == 'admin_backup' or current_url_name == 'admin_restore' %}is-active{% endif %}">
+        {% include "includes/icon_backup.html" %} 备份与恢复
+    </a>
+    <a href="{% url 'management:admin_settings_email' %}" class="nav-item {% if current_url_name == 'admin_settings_email' %}is-active{% endif %}">
+        {% include "includes/icon_coin.html" %} SMTP 邮件
+    </a>
+    <a href="{% url 'management:admin_settings_audit' %}" class="nav-item {% if current_url_name == 'admin_settings_audit' %}is-active{% endif %}">
+        {% include "includes/icon_shield.html" %} 日志审计
+    </a>
+</div>

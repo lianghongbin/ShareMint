@@ -1,0 +1,18 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}OAuth 登录 · ShareMint{% endblock %}
+
+{% block content %}
+<section class="auth-card crypto-glow">
+    <div class="auth-card__header">
+        <div class="auth-logo">{% include "includes/icon_shield.html" %}</div>
+        <h1>{{ provider|upper }} 登录</h1>
+        <p>第三方认证接口已预留，尚未正式接入。</p>
+    </div>
+    <div class="alert alert-info">
+        授权地址：<code>{{ auth_url }}</code>
+    </div>
+    <p class="text-muted">接入后可在此完成 Telegram WebApp / OAuth3 登录。</p>
+    <a href="{% url 'authentication:login' %}" class="btn btn-primary btn-block btn-glow">返回账号密码登录</a>
+</section>
+{% endblock %}

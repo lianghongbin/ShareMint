@@ -1,0 +1,38 @@
+{% extends "layouts/app.html" %}
+{% load sharemint_extras %}
+{% block title %}投资清册 · 成员{% endblock %}
+{% block page_title %}投资清册{% endblock %}
+{% block sidebar %}{% include "management/member/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<p class="page-desc text-muted">GDT 实时价格 {{ gdt_price }} USDT · 动态市值 = 持有数量 × 全局价格</p>
+{% include "includes/gdt_price_disclaimer.html" %}
+
+<div class="card table-card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>投资时间</th>
+                    <th>金额 (USDT)</th>
+                    <th>持有 (GDT)</th>
+                    <th>动态市值</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in investments %}
+                <tr>
+                    <td data-label="投资时间">{{ item.investment_date|date:"Y-m-d H:i" }}</td>
+                    <td data-label="金额">{{ item.investment_amount }}</td>
+                    <td data-label="持有">{{ item.holding_quantity|format_gdt }}</td>
+                    <td data-label="市值" class="highlight">{{ item.current_market_value|floatformat:2 }} USDT</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-muted empty-cell">暂无投资记录</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "includes/pagination.html" with page_obj=page_obj %}
+</div>
+{% endblock %}

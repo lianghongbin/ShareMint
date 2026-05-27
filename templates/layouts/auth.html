@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-auth{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+    {% include "includes/flash_messages.html" %}
+    {% block content %}{% endblock %}
+</div>
+{% endblock %}

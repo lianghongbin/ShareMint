@@ -1,0 +1,107 @@
+{% extends "layouts/app.html" %}
+{% block title %}日志审计 · 系统设置{% endblock %}
+{% block page_title %}日志审计{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_shield.html" %} 操作审计</h2>
+    </div>
+    <p class="card-desc">记录谁在什么时间做了什么操作，点击某一行可查看修改前后的详情。</p>
+
+    <div class="page-toolbar" style="margin-bottom: 0;">
+        <form method="get" class="search-form">
+            <input type="search" name="q" value="{{ q }}" placeholder="搜索操作者、操作类型…">
+            <button type="submit" class="btn btn-outline btn-sm">搜索</button>
+        </form>
+    </div>
+</article>
+
+<div class="card table-card">
+    <div class="table-wrap">
+        <table class="data-table table-striped">
+            <thead>
+                <tr>
+                    <th>操作者</th>
+                    <th>身份</th>
+                    <th>操作</th>
+                    <th class="col-time">时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr class="table-row-clickable" data-audit-url="{% url 'management:admin_settings_audit_detail' log.pk %}">
+                    <td data-label="操作者">
+                        {% if log.username %}
+                        <strong>{{ log.username }}</strong>
+                        {% else %}
+                        <span class="text-muted">未知用户</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="身份">{{ log.role_label }}</td>
+                    <td data-label="操作">{{ log.summary }}</td>
+                    <td data-label="时间" class="col-time">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="empty-cell">暂无审计记录</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "includes/pagination.html" with page_obj=page_obj %}
+</div>
+
+<div class="modal" id="audit-detail-modal" hidden>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog modal-dialog-wide crypto-glow">
+        <button type="button" class="modal-close" data-modal-close aria-label="关闭">&times;</button>
+        <div id="audit-detail-body" class="audit-detail-body">
+            <p class="text-muted">加载中…</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const modal = document.getElementById('audit-detail-modal');
+    const body = document.getElementById('audit-detail-body');
+
+    function closeModal() {
+        modal.hidden = true;
+    }
+
+    modal.addEventListener('click', function (e) {
+        if (e.target.closest('[data-modal-close]')) closeModal();
+    });
+
+    function openAuditDetail(url) {
+        body.innerHTML = '<p class="text-muted">加载中…</p>';
+        modal.hidden = false;
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (res) {
+                if (!res.ok) throw new Error('load failed');
+                return res.text();
+            })
+            .then(function (html) {
+                body.innerHTML = html;
+            })
+            .catch(function () {
+                body.innerHTML = '<p class="text-muted">加载失败，请稍后重试。</p><div class="modal-actions"><button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button></div>';
+            });
+    }
+
+    document.querySelectorAll('.table-row-clickable[data-audit-url]').forEach(function (row) {
+        row.addEventListener('click', function () {
+            openAuditDetail(row.dataset.auditUrl);
+        });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+})();
+</script>
+{% endblock %}

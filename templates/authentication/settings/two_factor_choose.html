@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}
+{% block title %}选择验证方式 · ShareMint{% endblock %}
+{% block page_title %}开启二次验证{% endblock %}
+{% block sidebar %}{% include sidebar_template %}{% endblock %}
+
+{% block content %}
+<div class="detail-toolbar">
+    <a href="{% url 'authentication:settings' %}" class="detail-back">← 返回设置</a>
+</div>
+
+<article class="card detail-section">
+    <div class="card-header-row">
+        <h2>{% include "includes/icon_shield.html" %} 选择验证方式</h2>
+    </div>
+    <p class="card-desc">请选择登录时的二次验证方式，开启后每次登录除密码外还需额外验证。</p>
+
+    <div class="two-factor-method-grid">
+        <a href="{% url 'authentication:settings_two_factor_setup_totp' %}" class="two-factor-method-card">
+            <span class="two-factor-method-icon">{% include "includes/icon_shield.html" %}</span>
+            <strong>验证器 App</strong>
+            <span>Google Authenticator 等 App 动态码，离线可用</span>
+        </a>
+
+        {% if has_email %}
+        <a href="{% url 'authentication:settings_two_factor_setup_email' %}" class="two-factor-method-card">
+            <span class="two-factor-method-icon">{% include "includes/icon_coin.html" %}</span>
+            <strong>邮件验证</strong>
+            <span>验证码发送至 {{ masked_email }}</span>
+        </a>
+        {% else %}
+        <div class="two-factor-method-card is-disabled">
+            <span class="two-factor-method-icon">{% include "includes/icon_coin.html" %}</span>
+            <strong>邮件验证</strong>
+            <span>请先在个人资料中填写邮箱后再使用</span>
+        </div>
+        {% endif %}
+    </div>
+</article>
+{% endblock %}

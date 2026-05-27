@@ -1,0 +1,22 @@
+<div class="form-grid-span-2 gdt-calculator"
+     data-gdt-calculator
+     data-amount-input-id="{{ amount_input_id|default:'investment_amount' }}"
+     data-quantity-input-id="{{ quantity_input_id|default:'holding_quantity' }}">
+    <div class="gdt-calculator-inner gdt-calculator-inner--compact">
+        <div class="gdt-calculator-toolbar">
+            <span class="gdt-calculator-price">
+                GDT <strong data-gdt-price>{{ gdt_price }}</strong> USDT
+            </span>
+            <label class="gdt-calculator-fee-inline" for="gdt_calc_fee">
+                <span>手续费</span>
+                <span class="gdt-calculator-fee-wrap">
+                    <input type="text" id="gdt_calc_fee" data-gdt-fee inputmode="decimal" placeholder="0" title="按投资金额的百分比扣除，例如 1 表示 1%">
+                    <span class="gdt-calculator-fee-suffix">%</span>
+                </span>
+            </label>
+            <span class="gdt-calculator-preview" data-gdt-preview>请输入投资金额</span>
+            <button type="button" class="btn btn-secondary btn-sm" data-gdt-calc-btn>计算 GDT</button>
+        </div>
+        {% include "includes/gdt_price_disclaimer.html" with compact=True %}
+    </div>
+</div>

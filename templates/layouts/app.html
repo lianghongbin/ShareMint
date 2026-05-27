@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-app{% endblock %}
+
+{% block body %}
+<div class="app-layout">
+    <aside class="sidebar" data-sidebar>
+        <div class="sidebar-brand">
+            <a href="{% url 'authentication:dashboard' %}">
+                {% include "includes/icon_logo.html" %}
+                <span>ShareMint</span>
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            {% block sidebar %}{% endblock %}
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user-name">{{ user.username }}</span>
+            <a href="{% url 'authentication:settings' %}"
+               class="sidebar-icon-btn {% if current_url_name == 'settings' or current_url_name == 'settings_two_factor_setup' or current_url_name == 'settings_two_factor_setup_totp' or current_url_name == 'settings_two_factor_setup_email' or current_url_name == 'change_password' %}is-active{% endif %}"
+               aria-label="设置" title="设置">
+                {% include "includes/icon_settings.html" %}
+            </a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+        <header class="app-topbar">
+            <button class="sidebar-toggle" type="button" aria-label="切换侧边栏" data-sidebar-toggle>
+                {% include "includes/icon_menu.html" %}
+            </button>
+            <div class="app-topbar-title">{% block page_title %}{% endblock %}</div>
+        </header>
+
+        <div class="app-content">
+            {% include "includes/flash_messages.html" %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <div class="sidebar-overlay" data-sidebar-overlay></div>
+</div>
+{% endblock %}

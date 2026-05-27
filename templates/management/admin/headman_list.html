@@ -1,0 +1,83 @@
+{% extends "layouts/app.html" %}
+{% block title %}团长列表 · 管理后台{% endblock %}
+{% block page_title %}团长列表{% endblock %}
+{% block sidebar %}{% include "management/admin/_sidebar.html" %}{% endblock %}
+
+{% block content %}
+<div class="page-toolbar">
+    <form method="get" class="search-form">
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        {% if order %}<input type="hidden" name="order" value="{{ order }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="搜索用户名或姓名…">
+        <button type="submit" class="btn btn-outline btn-sm">搜索</button>
+    </form>
+    <a href="{% url 'management:admin_create_headman' %}" class="btn btn-primary btn-glow btn-sm">{% include "includes/icon_users.html" %} 开户</a>
+</div>
+
+<div class="card table-card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% include "includes/sortable_th.html" with label="用户名" field="username" %}
+                    {% include "includes/sortable_th.html" with label="姓名" field="name" %}
+                    {% include "includes/sortable_th.html" with label="线下成员" field="member_count" %}
+                    {% include "includes/sortable_th.html" with label="投资总额" field="total_investment" %}
+                    {% include "includes/sortable_th.html" with label="状态" field="status" %}
+                    {% include "includes/sortable_th.html" with label="注册时间" field="date_joined" %}
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in headmen %}
+                <tr class="table-row-clickable" data-href="{% url 'management:admin_headman_detail' h.pk %}">
+                    <td data-label="用户名">
+                        <a href="{% url 'management:admin_headman_detail' h.pk %}" class="row-link">{{ h.username }}</a>
+                    </td>
+                    <td data-label="姓名">{{ h.profile.name|default:"—" }}</td>
+                    <td data-label="线下成员">{{ h.member_count }}</td>
+                    <td data-label="投资总额">{{ h.total_investment|floatformat:2 }} USDT</td>
+                    <td data-label="状态">
+                        {% if h.is_locked %}
+                        <span class="badge badge-danger">已锁定</span>
+                        {% else %}
+                        <span class="badge badge-success">正常</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="注册时间">{{ h.date_joined|date:"Y-m-d" }}</td>
+                    <td data-label="操作" class="table-actions">
+                        <a href="{% url 'management:admin_headman_detail' h.pk %}" class="btn btn-sm btn-primary">查看</a>
+                        <form method="post" action="{% url 'management:admin_toggle_lock' h.pk %}" class="inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="page" value="{{ page_obj.number }}">
+                            <button type="submit" class="btn btn-sm btn-outline" onclick="event.stopPropagation()">
+                                {% if h.is_locked %}解锁{% else %}锁定{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-muted empty-cell">暂无团长，请前往开户。</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "includes/pagination.html" with page_obj=page_obj query=query %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.table-row-clickable[data-href]').forEach(function (row) {
+    row.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, form')) return;
+        window.location = row.dataset.href;
+    });
+});
+document.querySelectorAll('.sort-link').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+});
+</script>
+{% endblock %}
