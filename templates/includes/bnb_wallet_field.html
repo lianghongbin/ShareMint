@@ -1,0 +1,27 @@
+<div class="form-group bnb-wallet-field{% if full_width %} form-grid-span-2{% endif %}" data-bnb-wallet-field>
+    <label for="{{ input_id|default:'bnb_wallet_address' }}">BNB 钱包地址 *</label>
+    <div class="bnb-wallet-notice" role="alert">
+        <p class="bnb-wallet-notice-line">
+            <span class="bnb-wallet-notice-icon" aria-hidden="true">{% include "includes/icon_danger.html" %}</span>
+            <span><strong>重要：</strong>必须填写 <strong>BNB Smart Chain（BEP20）</strong> 钱包地址。填错链或填错地址，转入资金将<strong class="bnb-wallet-emphasis">永久丢失、无法找回</strong>，损失不可挽回。</span>
+        </p>
+    </div>
+    <input type="text"
+           name="bnb_wallet_address"
+           id="{{ input_id|default:'bnb_wallet_address' }}"
+           value="{{ bnb_wallet_value|default:'' }}"
+           required
+           autocomplete="off"
+           spellcheck="false"
+           placeholder="0x 开头，共 42 位"
+           pattern="0x[0-9a-fA-F]{40}"
+           maxlength="42"
+           minlength="42"
+           class="bnb-wallet-input"
+           data-bnb-wallet-input>
+    <div class="bnb-wallet-meta">
+        <span class="field-hint">示例：0xd99ac4e4443800fe664e9332f7019789761fc6e5（42 位，请替换为成员真实地址）</span>
+        <span class="bnb-wallet-counter" data-bnb-wallet-counter>0 / 42 位</span>
+    </div>
+    <div class="bnb-wallet-error" data-bnb-wallet-error role="alert" hidden></div>
+</div>

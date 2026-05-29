@@ -55,7 +55,7 @@ class MemberImportExportTests(TestCase):
         wb = Workbook()
         ws = wb.active
         ws.append(HEADMAN_HEADERS)
-        ws.append(['new_member', '新成员', '', '', 'ShareMint123', 10000, 5, ''])
+        ws.append(['new_member', '新成员', '', '', '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0', 'ShareMint123', 10000, 5, ''])
         buffer = BytesIO()
         wb.save(buffer)
 
@@ -68,6 +68,20 @@ class MemberImportExportTests(TestCase):
         investment = Investment.objects.get(user=member)
         self.assertEqual(investment.investment_amount, Decimal('10000'))
         self.assertEqual(investment.holding_quantity, Decimal('9500'))
+        profile = Profile.objects.get(user=member)
+        self.assertEqual(profile.bnb_wallet_address, '0x742d35cc6634c0532925a3b844bc9e7595f0beb0')
+
+    def test_import_headman_rejects_invalid_bnb_wallet(self):
+        wb = Workbook()
+        ws = wb.active
+        ws.append(HEADMAN_HEADERS)
+        ws.append(['bad_wallet', '无效地址', '', '', 'not-a-wallet', 'ShareMint123', 1000, '0', ''])
+        buffer = BytesIO()
+        wb.save(buffer)
+
+        result = import_headman_workbook(self.headman, BytesIO(buffer.getvalue()))
+        self.assertEqual(result.created_members, 0)
+        self.assertTrue(any('BNB' in err.message for err in result.errors))
 
     def test_import_headman_rejects_duplicate_username(self):
         User.objects.create_user(
@@ -79,7 +93,7 @@ class MemberImportExportTests(TestCase):
         wb = Workbook()
         ws = wb.active
         ws.append(HEADMAN_HEADERS)
-        ws.append(['exists', '重复用户', '', '', 'ShareMint123', '1000', '0', ''])
+        ws.append(['exists', '重复用户', '', '', '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0', 'ShareMint123', '1000', '0', ''])
         buffer = BytesIO()
         wb.save(buffer)
 

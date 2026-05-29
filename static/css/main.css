@@ -1537,6 +1537,78 @@ code {
     display: flex; align-items: center; gap: 0.4rem; color: var(--color-muted);
 }
 .field-hint { display: block; margin-top: 0.25rem; font-size: 0.75rem; color: var(--color-muted); }
+.bnb-wallet-notice {
+    margin: 0.35rem 0 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    background: rgba(248, 113, 113, 0.12);
+    color: #fecaca;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+.bnb-wallet-notice-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+}
+.bnb-wallet-notice-icon {
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 0.1rem;
+}
+.bnb-wallet-notice-icon .icon-danger {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #f87171;
+}
+.bnb-wallet-notice strong { color: #fca5a5; }
+.bnb-wallet-emphasis {
+    color: #fff;
+    font-weight: 700;
+}
+.bnb-wallet-notice p { margin: 0; }
+.bnb-wallet-notice p + p { margin-top: 0.45rem; }
+.bnb-wallet-notice-risk { color: #fca5a5; }
+.bnb-wallet-notice-risk strong { color: #f87171; }
+.bnb-wallet-notice code {
+    font-size: 0.78rem;
+    padding: 0.05rem 0.25rem;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+}
+.bnb-wallet-input { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.bnb-wallet-input.is-invalid {
+    border-color: #f87171;
+    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.25);
+}
+.bnb-wallet-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem 1rem;
+    margin-top: 0.25rem;
+}
+.bnb-wallet-counter {
+    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--color-muted);
+    white-space: nowrap;
+}
+.bnb-wallet-counter.is-valid { color: #4ade80; }
+.bnb-wallet-counter.is-invalid { color: #f87171; font-weight: 600; }
+.bnb-wallet-error {
+    margin-top: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    background: rgba(248, 113, 113, 0.12);
+    color: #fecaca;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+.bnb-wallet-error[hidden] { display: none !important; }
 .checkbox-label {
     display: inline-flex; align-items: center; gap: 0.5rem;
     cursor: pointer; font-size: 0.875rem; color: var(--color-text);

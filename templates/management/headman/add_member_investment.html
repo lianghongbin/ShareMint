@@ -18,12 +18,15 @@
             <select name="member_id" id="member_id" required>
                 <option value="">请选择成员</option>
                 {% for m in members %}
-                <option value="{{ m.pk }}" {% if selected_member and selected_member.pk == m.pk %}selected{% endif %}>
+                <option value="{{ m.pk }}" {% if selected_member and selected_member.pk == m.pk %}selected{% endif %}
+                        data-bnb-wallet="{{ m.profile.bnb_wallet_address|default:'' }}">
                     {{ m.username }}{% if m.profile.name %} · {{ m.profile.name }}{% endif %}
                 </option>
                 {% endfor %}
             </select>
         </div>
+
+        {% include "includes/bnb_wallet_field.html" with bnb_wallet_value=selected_wallet %}
 
         <h3 class="subsection-title subsection-title--compact">本次投资</h3>
         <div class="form-grid form-grid--compact">
@@ -55,4 +58,21 @@
 
 {% block extra_js %}
 <script src="/static/js/gdt_quantity_calculator.js"></script>
+<script src="/static/js/bnb_wallet_field.js"></script>
+<script>
+(function () {
+    var select = document.getElementById('member_id');
+    var walletInput = document.getElementById('bnb_wallet_address');
+    if (!select || !walletInput) return;
+
+    function syncWalletFromSelection() {
+        var option = select.options[select.selectedIndex];
+        if (!option) return;
+        walletInput.value = option.getAttribute('data-bnb-wallet') || '';
+        walletInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    select.addEventListener('change', syncWalletFromSelection);
+})();
+</script>
 {% endblock %}

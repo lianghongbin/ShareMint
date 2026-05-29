@@ -16,6 +16,7 @@ from authentication.models import Role, User
 from authentication.users import is_username_taken
 from commissions.models import SystemConfig
 from management.models import Investment, Profile
+from management.wallet import canonical_bnb_wallet_address, validate_bnb_wallet_address
 
 DEFAULT_IMPORT_PASSWORD = 'ShareMint123'
 
@@ -32,6 +33,7 @@ HEADMAN_HEADERS = [
     '姓名',
     '手机号',
     '邮箱',
+    'BNB钱包地址',
     '初始密码',
     '投资金额(USDT)',
     '手续费比例(%)',
@@ -147,13 +149,14 @@ def build_headman_template_workbook() -> bytes:
     sheet = workbook.active
     sheet.title = '导入模板'
     _style_header_row(sheet, HEADMAN_HEADERS)
-    sheet.append(['member_demo1', '示例成员A', '13800000002', 'member1@example.com', DEFAULT_IMPORT_PASSWORD, '10000', '5', ''])
-    sheet.append(['member_demo2', '示例成员B', '13800000003', 'member2@example.com', DEFAULT_IMPORT_PASSWORD, '5000', '0', ''])
+    sheet.append(['member_demo1', '示例成员A', '13800000002', 'member1@example.com', '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0', DEFAULT_IMPORT_PASSWORD, '10000', '5', ''])
+    sheet.append(['member_demo2', '示例成员B', '13800000003', 'member2@example.com', '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1', DEFAULT_IMPORT_PASSWORD, '5000', '0', ''])
     notes = workbook.create_sheet('填写说明')
     notes.append(['说明'])
     notes.append(['1. 每行一名成员；投资金额与手续费比例用于计算 GDT 持有数量。'])
-    notes.append(['2. GDT 数量可留空，系统按当前 GDT 价格自动计算。'])
-    notes.append(['3. 初始密码留空时默认使用 ShareMint123。'])
+    notes.append(['2. BNB钱包地址必填，须为 BNB Smart Chain（BEP20）链地址（0x 开头，42 位）；填错链或填错地址将导致转入资金无法找回。'])
+    notes.append(['3. GDT 数量可留空，系统按当前 GDT 价格自动计算。'])
+    notes.append(['4. 初始密码留空时默认使用 ShareMint123。'])
     return _workbook_to_bytes(workbook)
 
 
@@ -204,6 +207,7 @@ def export_headman_workbook(headman: User) -> bytes:
             member_profile.name if member_profile else member.username,
             member_profile.phone if member_profile else '',
             member_profile.email if member_profile else '',
+            member_profile.bnb_wallet_address if member_profile else '',
             '',
             float(total_amount) if total_amount else '',
             float(fee_percent) if fee_percent is not None else '',
@@ -267,6 +271,7 @@ def _create_member_user(
     name: str,
     phone: str,
     email: str,
+    bnb_wallet_address: str,
     investment_amount: Decimal | None,
     holding_quantity: Decimal | None,
 ) -> User:
@@ -285,6 +290,7 @@ def _create_member_user(
         name=name,
         phone=phone,
         email=email,
+        bnb_wallet_address=bnb_wallet_address,
     )
     if investment_amount and investment_amount > 0 and holding_quantity and holding_quantity > 0:
         Investment.objects.create(
@@ -361,6 +367,7 @@ def import_headman_workbook(headman: User, file: BinaryIO) -> ImportResult:
         name = data['姓名']
         phone = data['手机号']
         email = data['邮箱']
+        bnb_wallet_raw = data['BNB钱包地址']
         password = data['初始密码'] or DEFAULT_IMPORT_PASSWORD
 
         if not username:
@@ -380,6 +387,11 @@ def import_headman_workbook(headman: User, file: BinaryIO) -> ImportResult:
             if email_error:
                 result.errors.append(ImportRowError(row_number, email_error))
                 continue
+        wallet_error = validate_bnb_wallet_address(bnb_wallet_raw)
+        if wallet_error:
+            result.errors.append(ImportRowError(row_number, wallet_error))
+            continue
+        bnb_wallet_address = canonical_bnb_wallet_address(bnb_wallet_raw)
 
         amount = _parse_decimal(data['投资金额(USDT)'])
         fee_percent = _parse_decimal(data['手续费比例(%)'], allow_none=True) or Decimal('0')
@@ -400,6 +412,7 @@ def import_headman_workbook(headman: User, file: BinaryIO) -> ImportResult:
                     name=name,
                     phone=phone,
                     email=email,
+                    bnb_wallet_address=bnb_wallet_address,
                     investment_amount=amount,
                     holding_quantity=holding,
                 )

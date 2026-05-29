@@ -9,5 +9,5 @@
 {% if is_locked %}
 <div class="alert alert-error">{% include "includes/icon_lock.html" %} 账号已锁定，仅可查看与导出，无法导入。</div>
 {% endif %}
-{% include "management/_member_import_export_panel.html" with page_title="团队成员 · Excel 导入导出" export_desc="导出您团队下全部成员及投资信息。" import_desc="批量新建会员；每行一名会员，填写投资金额与手续费比例后系统自动计算 GDT。" export_url=base_url|add:"?export=1" template_url=base_url|add:"?template=1" can_import=can_import show_gdt_help=True %}
+{% include "management/_member_import_export_panel.html" with page_title="团队成员 · Excel 导入导出" export_desc="导出您团队下全部成员及投资信息。" import_desc="批量新建会员；每行须填写 BNB Smart Chain（BEP20）钱包地址（填错链或地址将导致转入资金无法找回），以及投资金额与手续费比例（GDT 可自动计算）。" export_url=base_url|add:"?export=1" template_url=base_url|add:"?template=1" can_import=can_import show_gdt_help=True %}
 {% endblock %}

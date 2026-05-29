@@ -15,6 +15,11 @@ class Profile(models.Model):
     phone = models.CharField(max_length=20, blank=True, verbose_name='手机号')
     wechat = models.CharField(max_length=50, blank=True, verbose_name='微信号')
     email = models.EmailField(blank=True, verbose_name='邮箱')
+    bnb_wallet_address = models.CharField(
+        max_length=42,
+        blank=True,
+        verbose_name='BNB 钱包地址',
+    )
 
     class Meta:
         verbose_name = '用户档案'

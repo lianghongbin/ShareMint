@@ -38,7 +38,7 @@ class ProfileInline(admin.StackedInline):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'phone', 'wechat', 'email')
+    list_display = ('name', 'user', 'phone', 'wechat', 'email', 'bnb_wallet_address')
     search_fields = ('name', 'user__username', 'phone', 'email')
 
     def get_readonly_fields(self, request, obj=None):

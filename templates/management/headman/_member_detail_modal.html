@@ -77,6 +77,12 @@
     </div>
     <div class="member-kv-row member-kv-row-single">
         <div class="member-kv-field">
+            <span class="member-kv-label">BNB 钱包</span>
+            <span class="member-kv-value">{{ profile.bnb_wallet_address|default:"—" }}</span>
+        </div>
+    </div>
+    <div class="member-kv-row member-kv-row-single">
+        <div class="member-kv-field">
             <span class="member-kv-label">注册时间</span>
             <span class="member-kv-value">{{ member.date_joined|date:"Y-m-d H:i" }}</span>
         </div>
@@ -116,7 +122,7 @@
 {% endif %}
 
 <div class="modal-actions">
-    {% if show_investment_actions|default:True and not is_locked %}
+    {% if show_investment_actions != False and not is_locked %}
     <a href="{% url 'management:headman_add_member_investment' member.pk %}" class="btn btn-primary btn-sm">追加投资</a>
     {% endif %}
     <button type="button" class="btn btn-secondary btn-sm" data-modal-close>关闭</button>

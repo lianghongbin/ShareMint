@@ -46,6 +46,7 @@ from management.services.member_import_export import (
     import_admin_workbook,
     import_headman_workbook,
 )
+from management.wallet import canonical_bnb_wallet_address, validate_bnb_wallet_address
 from management.services.email_config import (
     EMAIL_MODE_CONSOLE,
     EMAIL_MODE_SMTP,
@@ -871,12 +872,16 @@ def headman_add_member(request):
         phone = request.POST.get('phone', '').strip()
         wechat = request.POST.get('wechat', '').strip()
         email = request.POST.get('email', '').strip()
+        bnb_wallet_address = request.POST.get('bnb_wallet_address', '').strip()
         investment_amount = request.POST.get('investment_amount', '').strip() or '0'
         holding_quantity = request.POST.get('holding_quantity', '').strip() or '0'
         email_error = validate_new_email(User(), email) if email else None
+        wallet_error = validate_bnb_wallet_address(bnb_wallet_address)
 
         if not all([username, password, name]):
             messages.error(request, '用户名、密码、姓名为必填项。')
+        elif wallet_error:
+            messages.error(request, wallet_error)
         elif is_username_taken(username):
             messages.error(request, '用户名已存在。')
         elif email_error:
@@ -897,6 +902,7 @@ def headman_add_member(request):
                         phone=phone,
                         wechat=wechat,
                         email=email,
+                        bnb_wallet_address=canonical_bnb_wallet_address(bnb_wallet_address),
                     )
                     amount = Decimal(investment_amount)
                     quantity = Decimal(holding_quantity)
@@ -913,6 +919,7 @@ def headman_add_member(request):
                     after={
                         '用户名': username,
                         '姓名': name,
+                        'BNB 钱包地址': canonical_bnb_wallet_address(bnb_wallet_address),
                         '投资金额 (USDT)': investment_amount,
                         '持有数量 (GDT)': holding_quantity,
                     },
@@ -951,9 +958,13 @@ def headman_add_investment(request, pk=None):
         profile = getattr(member, 'profile', None)
         investment_amount = request.POST.get('investment_amount', '').strip()
         holding_quantity = request.POST.get('holding_quantity', '').strip()
+        bnb_wallet_address = request.POST.get('bnb_wallet_address', '').strip()
+        wallet_error = validate_bnb_wallet_address(bnb_wallet_address)
 
         if not investment_amount or not holding_quantity:
             messages.error(request, '投资金额与持有数量为必填项。')
+        elif wallet_error:
+            messages.error(request, wallet_error)
         else:
             try:
                 amount = Decimal(investment_amount)
@@ -961,6 +972,10 @@ def headman_add_investment(request, pk=None):
                 if amount <= 0 and quantity <= 0:
                     messages.error(request, '投资金额或持有数量至少一项大于 0。')
                 else:
+                    canonical_wallet = canonical_bnb_wallet_address(bnb_wallet_address)
+                    if profile and profile.bnb_wallet_address != canonical_wallet:
+                        profile.bnb_wallet_address = canonical_wallet
+                        profile.save(update_fields=['bnb_wallet_address'])
                     Investment.objects.create(
                         user=member,
                         investment_date=timezone.now(),
@@ -973,6 +988,7 @@ def headman_add_investment(request, pk=None):
                         after={
                             '成员': member.username,
                             '姓名': profile.name if profile else '—',
+                            'BNB 钱包地址': canonical_wallet,
                             '投资金额 (USDT)': str(amount),
                             '持有数量 (GDT)': str(int(quantity.to_integral_value())),
                         },
@@ -985,9 +1001,16 @@ def headman_add_investment(request, pk=None):
             except (InvalidOperation, ValueError):
                 messages.error(request, '投资金额或持币数量格式无效。')
 
+    selected_wallet = ''
+    if selected_member:
+        profile = getattr(selected_member, 'profile', None)
+        if profile and profile.bnb_wallet_address:
+            selected_wallet = profile.bnb_wallet_address
+
     return render(request, 'management/headman/add_member_investment.html', {
         'members': members,
         'selected_member': selected_member,
+        'selected_wallet': selected_wallet,
         'gdt_price': SystemConfig.get_gdt_price(),
     })
 
