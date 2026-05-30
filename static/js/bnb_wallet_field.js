@@ -26,7 +26,6 @@
     function bindField(field) {
         var input = field.querySelector('[data-bnb-wallet-input]');
         var errorBox = field.querySelector('[data-bnb-wallet-error]');
-        var counter = field.querySelector('[data-bnb-wallet-counter]');
         var form = field.closest('form');
         if (!input || !errorBox || !form) {
             return;
@@ -48,11 +47,6 @@
 
         function refresh() {
             var text = input.value.trim();
-            if (counter) {
-                counter.textContent = text.length + ' / ' + LENGTH + ' 位';
-                counter.classList.toggle('is-valid', text.length === LENGTH && PATTERN.test(text));
-                counter.classList.toggle('is-invalid', text.length > 0 && text.length !== LENGTH);
-            }
             if (document.activeElement === input || input.classList.contains('is-invalid')) {
                 setError(validate(text));
             }
