@@ -113,8 +113,9 @@ def _list_query_string(request, *, sort=None, order=None, sortable=None, preserv
     return urlencode(params)
 
 
-def _members_with_totals(queryset):
-    gdt_price = SystemConfig.get_gdt_price()
+def _members_with_totals(queryset, gdt_price=None):
+    if gdt_price is None:
+        gdt_price = SystemConfig.get_gdt_price()
     return queryset.select_related('profile').annotate(
         total_investment=Coalesce(
             Sum('investments__investment_amount'),
@@ -132,6 +133,31 @@ def _members_with_totals(queryset):
             output_field=DecimalField(max_digits=18, decimal_places=2),
         ),
     )
+
+
+def _annotate_investment_market_value(queryset, gdt_price):
+    return queryset.annotate(
+        market_value=ExpressionWrapper(
+            F('holding_quantity') * Value(gdt_price),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        ),
+    )
+
+
+def _member_detail_context(member, profile, gdt_price, **extra):
+    investments = _annotate_investment_market_value(
+        Investment.objects.filter(user=member).order_by('-investment_date')[:50],
+        gdt_price,
+    )
+    context = {
+        'member': member,
+        'profile': profile,
+        'investments': investments,
+        'gdt_price': gdt_price,
+        'total_market_value': member.total_market_value,
+    }
+    context.update(extra)
+    return context
 
 
 @login_required
@@ -234,24 +260,19 @@ def admin_member_list(request):
 
 @admin_required
 def admin_member_detail(request, pk):
+    gdt_price = SystemConfig.get_gdt_price()
     member = get_object_or_404(
-        _members_with_totals(User.objects.select_related('profile')),
+        _members_with_totals(User.objects.select_related('profile'), gdt_price=gdt_price),
         pk=pk,
         role=Role.MEMBER,
     )
     profile = getattr(member, 'profile', None)
-    all_investments = Investment.objects.filter(user=member)
-    gdt_price = SystemConfig.get_gdt_price()
-    total_market_value = sum((inv.current_market_value for inv in all_investments), Decimal('0'))
-    investments = all_investments.order_by('-investment_date')[:50]
-    context = {
-        'member': member,
-        'profile': profile,
-        'investments': investments,
-        'gdt_price': gdt_price,
-        'total_market_value': total_market_value,
-        'show_investment_actions': False,
-    }
+    context = _member_detail_context(
+        member,
+        profile,
+        gdt_price,
+        show_investment_actions=False,
+    )
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render(request, 'management/headman/_member_detail_modal.html', context)
     return redirect('management:admin_member_list')
@@ -798,25 +819,20 @@ def headman_member_list(request):
 
 @headman_required
 def headman_member_detail(request, pk):
+    gdt_price = SystemConfig.get_gdt_price()
     member = get_object_or_404(
-        _members_with_totals(User.objects.select_related('profile')),
+        _members_with_totals(User.objects.select_related('profile'), gdt_price=gdt_price),
         pk=pk,
         role=Role.MEMBER,
         referrer=request.user,
     )
     profile = getattr(member, 'profile', None)
-    all_investments = Investment.objects.filter(user=member)
-    gdt_price = SystemConfig.get_gdt_price()
-    total_market_value = sum((inv.current_market_value for inv in all_investments), Decimal('0'))
-    investments = all_investments.order_by('-investment_date')[:50]
-    context = {
-        'member': member,
-        'profile': profile,
-        'investments': investments,
-        'gdt_price': gdt_price,
-        'total_market_value': total_market_value,
-        'is_locked': request.user.is_locked,
-    }
+    context = _member_detail_context(
+        member,
+        profile,
+        gdt_price,
+        is_locked=request.user.is_locked,
+    )
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render(request, 'management/headman/_member_detail_modal.html', context)
     return redirect('management:headman_member_list')
@@ -1019,28 +1035,40 @@ def headman_add_investment(request, pk=None):
 
 @member_required
 def member_dashboard(request):
-    investments = Investment.objects.filter(user=request.user)
     gdt_price = SystemConfig.get_gdt_price()
-    total_investment = investments.aggregate(
-        total=Coalesce(Sum('investment_amount'), Value(Decimal('0')), output_field=DecimalField(max_digits=18, decimal_places=2)),
-    )['total']
-    total_market_value = sum((i.current_market_value for i in investments), Decimal('0'))
+    stats = Investment.objects.filter(user=request.user).aggregate(
+        total_investment=Coalesce(
+            Sum('investment_amount'),
+            Value(Decimal('0')),
+            output_field=DecimalField(max_digits=18, decimal_places=2),
+        ),
+        total_tokens=Coalesce(
+            Sum('holding_quantity'),
+            Value(Decimal('0')),
+            output_field=DecimalField(max_digits=18, decimal_places=8),
+        ),
+        investment_count=Count('id'),
+    )
+    total_tokens = stats['total_tokens'] or Decimal('0')
     referrer_profile = None
     if request.user.referrer and hasattr(request.user.referrer, 'profile'):
         referrer_profile = request.user.referrer.profile
     return render(request, 'management/member/dashboard.html', {
-        'investment_count': investments.count(),
+        'investment_count': stats['investment_count'],
         'gdt_price': gdt_price,
-        'total_investment': total_investment,
-        'total_market_value': total_market_value,
+        'total_investment': stats['total_investment'],
+        'total_market_value': total_tokens * gdt_price,
         'referrer_profile': referrer_profile,
     })
 
 
 @member_required
 def member_investments(request):
-    investments = Investment.objects.filter(user=request.user)
     gdt_price = SystemConfig.get_gdt_price()
+    investments = _annotate_investment_market_value(
+        Investment.objects.filter(user=request.user),
+        gdt_price,
+    )
     page_obj = _paginate(request, investments)
     return render(request, 'management/member/investments.html', {
         'page_obj': page_obj,

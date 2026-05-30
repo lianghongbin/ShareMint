@@ -160,3 +160,47 @@ class AuditLogClearTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(AuditLog.objects.count(), 1)
+
+
+class MemberDetailQueryTests(TestCase):
+    def setUp(self):
+        self.headman = User.objects.create_user(
+            username='hm_query',
+            password='pass12345',
+            role=Role.HEADMAN,
+        )
+        self.member = User.objects.create_user(
+            username='mem_query',
+            password='pass12345',
+            role=Role.MEMBER,
+            referrer=self.headman,
+        )
+        Profile.objects.create(user=self.member, name='成员Q')
+        for amount in (Decimal('1000'), Decimal('2000'), Decimal('3000')):
+            Investment.objects.create(
+                user=self.member,
+                investment_date='2026-01-01T00:00:00Z',
+                investment_amount=amount,
+                holding_quantity=amount,
+            )
+
+    def test_headman_member_detail_does_not_query_gdt_price_per_investment(self):
+        from django.db import connection
+        from django.test import RequestFactory
+        from django.test.utils import CaptureQueriesContext
+
+        from management.views import headman_member_detail
+
+        factory = RequestFactory()
+        request = factory.get(
+            f'/headman/members/{self.member.pk}/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        request.user = self.headman
+        with CaptureQueriesContext(connection) as ctx:
+            response = headman_member_detail(request, pk=self.member.pk)
+        gdt_queries = sum(
+            1 for q in ctx.captured_queries if 'commissions_systemconfig' in q['sql'].lower()
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(gdt_queries, 1)

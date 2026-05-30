@@ -64,11 +64,14 @@ class Investment(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.investment_amount} USDT'
 
+    def market_value_at(self, gdt_price: Decimal) -> Decimal:
+        return self.holding_quantity * gdt_price
+
     @property
     def current_market_value(self) -> Decimal:
         from commissions.models import SystemConfig
 
-        return self.holding_quantity * SystemConfig.get_gdt_price()
+        return self.market_value_at(SystemConfig.get_gdt_price())
 
 
 class AuditLog(models.Model):

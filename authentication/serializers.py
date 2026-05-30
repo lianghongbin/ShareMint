@@ -49,11 +49,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class InvestmentSerializer(serializers.ModelSerializer):
-    current_market_value = serializers.DecimalField(
-        max_digits=18,
-        decimal_places=8,
-        read_only=True,
-    )
+    current_market_value = serializers.SerializerMethodField()
 
     class Meta:
         model = Investment
@@ -67,6 +63,14 @@ class InvestmentSerializer(serializers.ModelSerializer):
             'current_market_value',
         )
         read_only_fields = ('id',)
+
+    def get_current_market_value(self, obj):
+        gdt_price = self.context.get('gdt_price')
+        if gdt_price is None:
+            from commissions.models import SystemConfig
+
+            gdt_price = SystemConfig.get_gdt_price()
+        return obj.market_value_at(gdt_price)
 
 
 class PasswordChangeSerializer(serializers.Serializer):
